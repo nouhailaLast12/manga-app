@@ -4,14 +4,11 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App.jsx'
 import './index.css'
 
-// Intercept fetch globally to fix all MangaDex requests automatically
 const originalFetch = window.fetch;
 window.fetch = async function(resource, init) {
   let url = resource;
   if (typeof url === 'string' && url.includes('api.mangadex.org')) {
-  
     url = url.replace('http://', 'https://');
-    
     if (!url.includes('corsproxy.io')) {
       url = `https://corsproxy.io/?${encodeURIComponent(url)}`;
     }
@@ -25,4 +22,4 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       <App />
     </BrowserRouter>
   </React.StrictMode>,
-)
+) //hu
