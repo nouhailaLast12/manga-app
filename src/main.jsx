@@ -9,9 +9,9 @@ window.fetch = async function(resource, init) {
   let url = resource;
   if (typeof url === 'string' && url.includes('api.mangadex.org')) {
     url = url.replace('http://', 'https://');
-    if (!url.includes('corsproxy.io')) {
-      
-      url = `https://corsproxy.io/?${encodeURIComponent(url)}`;
+    if (!url.includes('api.allorigins.win')) {
+     
+      url = `https://api.allorigins.win/raw?url=${url}`;
     }
   }
   return originalFetch(url, init);
