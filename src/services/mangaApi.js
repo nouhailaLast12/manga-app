@@ -1,4 +1,4 @@
-const BASE_URL = 'https://corsproxy.io/?' + encodeURIComponent('https://api.mangadex.org');
+const BASE_URL = '/api/mangadex';
 
 export const fetchPopularManga = async (searchQuery = '') => {
   try {

@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/mangadex/:match*",
+      "destination": "https://api.mangadex.org/:match*"
+    }
+  ]
+}
