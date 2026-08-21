@@ -9,9 +9,9 @@ window.fetch = async function(resource, init) {
   let url = resource;
   if (typeof url === 'string' && url.includes('api.mangadex.org')) {
     url = url.replace('http://', 'https://');
-    if (!url.includes('thingproxy.freeboard.io')) {
+    if (!url.includes('codetabs.com')) {
      
-      url = `https://thingproxy.freeboard.io/fetch/${url}`;
+      url = `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`;
     }
   }
   return originalFetch(url, init);
