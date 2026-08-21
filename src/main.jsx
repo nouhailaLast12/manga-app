@@ -8,8 +8,12 @@ import './index.css'
 const originalFetch = window.fetch;
 window.fetch = async function(resource, init) {
   let url = resource;
-  if (typeof url === 'string' && url.includes('api.mangadex.org') && !url.includes('corsproxy.io')) {
-    url = `https://corsproxy.io/?${url}`;
+  if (typeof url === 'string' && url.includes('api.mangadex.org')) {
+    
+    url = url.replace('http://', 'https://');
+    if (!url.includes('corsproxy.io')) {
+      url = `https://corsproxy.io/?${url}`;
+    }
   }
   return originalFetch(url, init);
 };
