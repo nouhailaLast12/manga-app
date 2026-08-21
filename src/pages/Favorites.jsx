@@ -51,7 +51,7 @@ export default function Favorites({ session: propSession, onOpenAuth }) {
           dbData.map(async (item) => {
             try {
               const res = await fetch(
-                `https://api.mangadex.org/manga/${item.manga_id}?includes[]=cover_art`
+                `http://api.mangadex.org/manga/${item.manga_id}?includes[]=cover_art`
               );
               const json = await res.json();
               const mangaData = json.data;
@@ -70,7 +70,7 @@ export default function Favorites({ session: propSession, onOpenAuth }) {
                 ...item,
                 manga_title: title,
                 manga_cover: coverFileName
-                  ? `https://uploads.mangadex.org/covers/${item.manga_id}/${coverFileName}.256.jpg`
+                  ? `http://uploads.mangadex.org/covers/${item.manga_id}/${coverFileName}.256.jpg`
                   : null
               };
             } catch (err) {

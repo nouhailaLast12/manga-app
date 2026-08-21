@@ -55,7 +55,7 @@ export default function Navbar({ session, onOpenAuth }) {
     setRandomLoading(true);
     setShowGenresMenu(false);
     try {
-      const res = await fetch('https://api.mangadex.org/manga/random');
+      const res = await fetch('http://api.mangadex.org/manga/random');
       const data = await res.json();
       if (data?.data?.id) {
         navigate(`/manga/${data.data.id}`);

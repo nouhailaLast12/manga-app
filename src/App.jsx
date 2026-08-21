@@ -22,7 +22,7 @@ function Home({ session, setShowAuthModal }) {
       setLoading(true);
       try {
         const titleParam = searchQuery ? `&title=${encodeURIComponent(searchQuery)}` : '';
-        const url = `https://api.mangadex.org/manga?limit=20${titleParam}&includes[]=cover_art&contentRating[]=safe`;
+        const url = `http://api.mangadex.org/manga?limit=20${titleParam}&includes[]=cover_art&contentRating[]=safe`;
           
         const response = await fetch(url);
         const data = await response.json();
@@ -43,7 +43,7 @@ function Home({ session, setShowAuthModal }) {
             description,
             status: item.attributes?.status?.toUpperCase() || 'ONGOING',
             cover: coverFileName
-              ? `https://uploads.mangadex.org/covers/${item.id}/${coverFileName}.256.jpg`
+              ? `http://uploads.mangadex.org/covers/${item.id}/${coverFileName}.256.jpg`
               : null
           };
         });

@@ -31,7 +31,7 @@ export default function MangaViewer({ session: propSession, onOpenAuth }) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
 
       try {
-        const res = await fetch(`https://api.mangadex.org/at-home/server/${chapterId}`);
+        const res = await fetch(`http://api.mangadex.org/at-home/server/${chapterId}`);
         if (!res.ok) throw new Error('Failed to load chapter');
         const data = await res.json();
         const baseUrl = data.baseUrl;
@@ -39,7 +39,7 @@ export default function MangaViewer({ session: propSession, onOpenAuth }) {
         const pageFiles = data.chapter?.data || [];
         setPages(pageFiles.map((f) => `${baseUrl}/data/${hash}/${f}`));
 
-        const chInfoRes = await fetch(`https://api.mangadex.org/chapter/${chapterId}`);
+        const chInfoRes = await fetch(`http://api.mangadex.org/chapter/${chapterId}`);
         const chInfoData = await chInfoRes.json();
         const currentChAttr = chInfoData.data?.attributes;
         setCurrentChapterNum(currentChAttr?.chapter || '');
@@ -48,7 +48,7 @@ export default function MangaViewer({ session: propSession, onOpenAuth }) {
 
         if (mangaRel?.id) {
           const feedRes = await fetch(
-            `https://api.mangadex.org/manga/${mangaRel.id}/feed?translatedLanguage[]=en&order[chapter]=asc&limit=500`
+            `http://api.mangadex.org/manga/${mangaRel.id}/feed?translatedLanguage[]=en&order[chapter]=asc&limit=500`
           );
           const feedData = await feedRes.json();
           const allChapters = feedData.data || [];

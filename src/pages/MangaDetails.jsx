@@ -59,7 +59,7 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
       setLoading(true);
       try {
         const mangaRes = await fetch(
-          `https://api.mangadex.org/manga/${id}?includes[]=cover_art`
+          `http://api.mangadex.org/manga/${id}?includes[]=cover_art`
         );
         const mangaData = await mangaRes.json();
         const item = mangaData.data;
@@ -73,7 +73,7 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
         const coverRel = item?.relationships?.find((r) => r.type === 'cover_art');
         const coverFileName = coverRel?.attributes?.fileName;
         const cover = coverFileName
-          ? `https://uploads.mangadex.org/covers/${id}/${coverFileName}.512.jpg`
+          ? `http://uploads.mangadex.org/covers/${id}/${coverFileName}.512.jpg`
           : null;
 
         const genres = item?.attributes?.tags
@@ -90,7 +90,7 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
         });
 
         const chaptersRes = await fetch(
-          `https://api.mangadex.org/manga/${id}/feed?translatedLanguage[]=en&translatedLanguage[]=fr&order[chapter]=asc&limit=100`
+          `http://api.mangadex.org/manga/${id}/feed?translatedLanguage[]=en&translatedLanguage[]=fr&order[chapter]=asc&limit=100`
         );
         const chaptersData = await chaptersRes.json();
         setChapters(chaptersData.data || []);
@@ -263,7 +263,7 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
               No translated chapters available via API for this title.
             </p>
             <a
-              href={`https://mangadex.org/title/${id}`}
+              href={`http://mangadex.org/title/${id}`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-pink-500/10 border border-pink-500/30 hover:bg-pink-500/20 text-pink-400 rounded-xl text-xs font-bold transition-all"
