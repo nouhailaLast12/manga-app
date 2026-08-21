@@ -1,11 +1,9 @@
-const BASE_URL = 'https://api.mangadex.org';
+const BASE_URL = 'https://corsproxy.io/?https://api.mangadex.org';
 
 export const fetchPopularManga = async (searchQuery = '') => {
   try {
-    // إضافة تصفية البحث إذا كانت الكلمة مكتوبة
     const titleParam = searchQuery ? `&title=${encodeURIComponent(searchQuery)}` : '';
     
-    // طلب البيانات مع تضمين الغلاف (includes[]=cover_art)
     const response = await fetch(
       `${BASE_URL}/manga?limit=20&includes[]=cover_art&contentRating[]=safe${titleParam}`
     );
@@ -13,8 +11,7 @@ export const fetchPopularManga = async (searchQuery = '') => {
     if (!response.ok) throw new Error('Network response was not ok');
 
     const data = await response.json();
-
-    // تنسيق البيانات لتضمين رابط الغلاف المباشر والعنوان
+    
     return data.data.map((item) => {
       const coverRel = item.relationships?.find((r) => r.type === 'cover_art');
       const coverFileName = coverRel?.attributes?.fileName;
