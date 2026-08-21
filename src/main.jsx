@@ -4,15 +4,14 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App.jsx'
 import './index.css'
 
-// Intercept fetch to automatically add CORS proxy to all MangaDex requests
 const originalFetch = window.fetch;
 window.fetch = async function(resource, init) {
   let url = resource;
   if (typeof url === 'string' && url.includes('api.mangadex.org')) {
-    
     url = url.replace('http://', 'https://');
-    if (!url.includes('corsproxy.io')) {
-      url = `https://corsproxy.io/?${url}`;
+  
+    if (!url.includes('api.allorigins.win')) {
+      url = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
     }
   }
   return originalFetch(url, init);
