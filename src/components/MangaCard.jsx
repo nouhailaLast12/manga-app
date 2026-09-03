@@ -8,8 +8,8 @@ export default function MangaCard({ manga, session, onOpenAuth }) {
   const [isFavorite, setIsFavorite] = useState(false);
   const [favLoading, setFavLoading] = useState(false);
 
-  const title = typeof manga.title === 'string' 
-    ? manga.title 
+  const title = typeof manga.title === 'string'
+    ? manga.title
     : manga.attributes?.title?.en || Object.values(manga.attributes?.title || {})[0] || 'Untitled';
 
   const description = typeof manga.description === 'string'
@@ -35,7 +35,7 @@ export default function MangaCard({ manga, session, onOpenAuth }) {
 
   const toggleFavorite = async () => {
     if (!session?.user) {
-      if (onOpenAuth) onOpenAuth(); 
+      if (onOpenAuth) onOpenAuth();
       return;
     }
 

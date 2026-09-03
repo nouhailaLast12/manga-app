@@ -3,7 +3,7 @@ const BASE_URL = '/api/mangadex';
 export const fetchPopularManga = async (searchQuery = '') => {
   try {
     const titleParam = searchQuery ? `&title=${encodeURIComponent(searchQuery)}` : '';
-    
+
     const response = await fetch(
       `${BASE_URL}/manga?limit=20&includes[]=cover_art&contentRating[]=safe${titleParam}`
     );
@@ -11,20 +11,22 @@ export const fetchPopularManga = async (searchQuery = '') => {
     if (!response.ok) throw new Error('Network response was not ok');
 
     const data = await response.json();
-    
+
     return data.data.map((item) => {
       const coverRel = item.relationships?.find((r) => r.type === 'cover_art');
       const coverFileName = coverRel?.attributes?.fileName;
 
       // إذا ماكانش اسم ملف الغلاف أو كان هو البلايسهولدر المعروف، نعتبره غير موجود
       const isPlaceholder = !coverFileName || coverFileName.includes('placeholder');
-      
+
       const rawCoverUrl = (!isPlaceholder && coverFileName)
         ? `https://uploads.mangadex.org/covers/${item.id}/${coverFileName}.256.jpg`
         : null;
 
-      const cover = rawCoverUrl 
-        ? `https://wsrv.nl/?url=${encodeURIComponent(rawCoverUrl)}&w=256&fit=cover`
+      // نمرو من البروكسي ديالنا (api/cover.js) بدل wsrv.nl
+      // باش نتحكمو فـ Referer header ونتفاداو صورة "You can read this at: MANGADEX"
+      const cover = rawCoverUrl
+        ? `/api/cover?url=${encodeURIComponent(rawCoverUrl)}`
         : null;
 
       return {
