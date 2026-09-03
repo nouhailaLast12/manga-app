@@ -70,17 +70,22 @@ export default function MangaCard({ manga, session, onOpenAuth }) {
     }
   };
 
+  // التحقق من أن الغلاف ليس فارغاً وأنه ليس رابطاً وهمياً
+  const isValidCover = manga.cover && !manga.cover.includes('null');
+
   return (
     <div className="bg-[#141824] rounded-2xl border border-pink-500/10 p-3 flex flex-col justify-between hover:border-pink-500/30 transition-all group shadow-lg">
       <div>
         <div className="relative aspect-[3/4] rounded-xl overflow-hidden mb-3 bg-[#0a0c10] flex items-center justify-center">
-          {manga.cover && !imgError ? (
+          {isValidCover && !imgError ? (
             <img
               src={manga.cover}
               alt={title}
               onError={() => setImgError(true)}
               onLoad={(e) => {
-                if (e.target.naturalWidth === e.target.naturalHeight) {
+                // مانغا ديكس بلايسهولدر كيكون مربع (العرض يساوي الطول تقريبا) 
+                // بينما أغلفة المانغا الحقيقية بتكون مستطيلة (الطول أكبر من العرض بوضوح)
+                if (Math.abs(e.target.naturalWidth - e.target.naturalHeight) < 20) {
                   setImgError(true);
                 }
               }}
