@@ -22,7 +22,7 @@ export const fetchPopularManga = async (searchQuery = '') => {
         description: item.attributes.description?.en || 'No description available.',
         status: item.attributes.status?.toUpperCase() || 'ONGOING',
         cover: coverFileName
-          ? `/api/uploads/covers/${item.id}/${coverFileName}.256.jpg`
+          ? `https://uploads.mangadex.org/covers/${item.id}/${coverFileName}.256.jpg`
           : null,
         genres: item.attributes.tags
           ?.filter((tag) => tag.attributes.group === 'genre')
