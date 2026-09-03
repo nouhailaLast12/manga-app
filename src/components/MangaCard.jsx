@@ -70,7 +70,6 @@ export default function MangaCard({ manga, session, onOpenAuth }) {
     }
   };
 
-  // التحقق من أن الغلاف ليس فارغاً وأنه ليس رابطاً وهمياً
   const isValidCover = manga.cover && !manga.cover.includes('null');
 
   return (
@@ -81,12 +80,22 @@ export default function MangaCard({ manga, session, onOpenAuth }) {
             <img
               src={manga.cover}
               alt={title}
+              crossOrigin="anonymous"
               onError={() => setImgError(true)}
               onLoad={(e) => {
-                // مانغا ديكس بلايسهولدر كيكون مربع (العرض يساوي الطول تقريبا) 
-                // بينما أغلفة المانغا الحقيقية بتكون مستطيلة (الطول أكبر من العرض بوضوح)
-                if (Math.abs(e.target.naturalWidth - e.target.naturalHeight) < 20) {
-                  setImgError(true);
+                try {
+                  const canvas = document.createElement('canvas');
+                  canvas.width = 10;
+                  canvas.height = 10;
+                  const ctx = canvas.getContext('2d');
+                  ctx.drawImage(e.target, 0, 0, 10, 10);
+                  const [r, g, b] = ctx.getImageData(5, 5, 1, 1).data;
+                  // إذا كانت الخلفية بيضاء ساطعة (بلايسهولدر مانغا ديكس)، نعتبرها خطأ ونخفيها
+                  if (r > 240 && g > 240 && b > 240) {
+                    setImgError(true);
+                  }
+                } catch (err) {
+                  // تجاوز أي قيود كورس في حال وقعت
                 }
               }}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
