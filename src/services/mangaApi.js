@@ -16,9 +16,13 @@ export const fetchPopularManga = async (searchQuery = '') => {
       const coverRel = item.relationships?.find((r) => r.type === 'cover_art');
       const coverFileName = coverRel?.attributes?.fileName;
 
-      // هنا درنا شرط: إلا كاين اسم الملف كنحطو الرابط الرسمي، وإلا ما كاينش كنحطو null باش تبان أيقونة No Image زوينة وما تخرجش ديك التصويرة الخايبة ديال MangaDex
-      const cover = coverFileName
+      // هنا درنا البروكسي باش نصفيو التصاور ونحميوهم من المشاكل ديال المصدر
+      const rawCoverUrl = coverFileName
         ? `https://uploads.mangadex.org/covers/${item.id}/${coverFileName}.256.jpg`
+        : null;
+
+      const cover = rawCoverUrl 
+        ? `https://wsrv.nl/?url=${encodeURIComponent(rawCoverUrl)}&w=256&fit=cover`
         : null;
 
       return {
