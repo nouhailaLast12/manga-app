@@ -51,7 +51,7 @@ export default function Favorites({ session: propSession, onOpenAuth }) {
           dbData.map(async (item) => {
             try {
               const res = await fetch(
-                `https://api.mangadex.org/manga/${item.manga_id}?includes[]=cover_art`
+                `/api/mangadex/manga/${item.manga_id}?includes[]=cover_art`
               );
               const json = await res.json();
               const mangaData = json.data;

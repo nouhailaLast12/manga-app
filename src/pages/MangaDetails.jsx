@@ -59,7 +59,7 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
       setLoading(true);
       try {
         const mangaRes = await fetch(
-          `https://api.mangadex.org/manga/${id}?includes[]=cover_art`
+          `/api/mangadex/manga/${id}?includes[]=cover_art`
         );
         const mangaData = await mangaRes.json();
         const item = mangaData.data;
@@ -90,7 +90,7 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
         });
 
         const chaptersRes = await fetch(
-          `https://api.mangadex.org/manga/${id}/feed?translatedLanguage[]=en&translatedLanguage[]=fr&order[chapter]=asc&limit=100`
+          `/api/mangadex/manga/${id}/feed?translatedLanguage[]=en&translatedLanguage[]=fr&order[chapter]=asc&limit=100`
         );
         const chaptersData = await chaptersRes.json();
         setChapters(chaptersData.data || []);

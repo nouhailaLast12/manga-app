@@ -22,7 +22,7 @@ function Home({ session, setShowAuthModal }) {
       setLoading(true);
       try {
         const titleParam = searchQuery ? `&title=${encodeURIComponent(searchQuery)}` : '';
-        const url = `http://api.mangadex.org/manga?limit=20${titleParam}&includes[]=cover_art&contentRating[]=safe`;
+        const url = `/api/mangadex/manga?limit=20${titleParam}&includes[]=cover_art&contentRating[]=safe`;
           
         const response = await fetch(url);
         const data = await response.json();
