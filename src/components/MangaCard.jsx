@@ -70,34 +70,15 @@ export default function MangaCard({ manga, session, onOpenAuth }) {
     }
   };
 
-  const isValidCover = manga.cover && !manga.cover.includes('null');
-
   return (
     <div className="bg-[#141824] rounded-2xl border border-pink-500/10 p-3 flex flex-col justify-between hover:border-pink-500/30 transition-all group shadow-lg">
       <div>
         <div className="relative aspect-[3/4] rounded-xl overflow-hidden mb-3 bg-[#0a0c10] flex items-center justify-center">
-          {isValidCover && !imgError ? (
+          {manga.cover && !imgError ? (
             <img
               src={manga.cover}
               alt={title}
-              crossOrigin="anonymous"
               onError={() => setImgError(true)}
-              onLoad={(e) => {
-                try {
-                  const canvas = document.createElement('canvas');
-                  canvas.width = 10;
-                  canvas.height = 10;
-                  const ctx = canvas.getContext('2d');
-                  ctx.drawImage(e.target, 0, 0, 10, 10);
-                  const [r, g, b] = ctx.getImageData(5, 5, 1, 1).data;
-                  // إذا كانت الخلفية بيضاء ساطعة (بلايسهولدر مانغا ديكس)، نعتبرها خطأ ونخفيها
-                  if (r > 240 && g > 240 && b > 240) {
-                    setImgError(true);
-                  }
-                } catch (err) {
-                  // تجاوز أي قيود كورس في حال وقعت
-                }
-              }}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               loading="lazy"
             />
