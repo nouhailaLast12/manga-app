@@ -33,6 +33,43 @@ export default function MangaCard({ manga, session, onOpenAuth }) {
     checkFavoriteStatus();
   }, [session, manga.id]);
 
+  const toggleFavorite = async () => {
+    if (!session?.user) {
+      if (onOpenAuth) onOpenAuth(); 
+      return;
+    }
+
+    setFavLoading(true);
+    try {
+      if (isFavorite) {
+        await supabase
+          .from('favorites')
+          .delete()
+          .eq('user_id', session.user.id)
+          .eq('manga_id', manga.id);
+
+        setIsFavorite(false);
+      } else {
+        await supabase
+          .from('favorites')
+          .insert([
+            {
+              user_id: session.user.id,
+              manga_id: manga.id,
+              manga_title: title,
+              manga_cover: manga.cover
+            }
+          ]);
+
+        setIsFavorite(true);
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+    } finally {
+      setFavLoading(false);
+    }
+  };
+
   return (
     <div className="bg-[#141824] rounded-2xl border border-pink-500/10 p-3 flex flex-col justify-between hover:border-pink-500/30 transition-all group shadow-lg">
       <div>
@@ -43,8 +80,6 @@ export default function MangaCard({ manga, session, onOpenAuth }) {
               alt={title}
               onError={() => setImgError(true)}
               onLoad={(e) => {
-                // مانغا ديكس بلايسهولدر غالباً كيكون حجمه أو أبعاده مربعة أو مميزة، 
-                // هنا كنمينيو أي تصويرة عرضها كيقارب طولها أو فيها شي مشكل في الأبعاد
                 if (e.target.naturalWidth === e.target.naturalHeight) {
                   setImgError(true);
                 }
