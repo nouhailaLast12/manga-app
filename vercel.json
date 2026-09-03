@@ -7,6 +7,10 @@
     {
       "source": "/api/uploads/:path*",
       "destination": "https://uploads.mangadex.org/:path*"
+    },
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/index.html"
     }
   ]
 }
