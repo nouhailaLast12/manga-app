@@ -8,23 +8,11 @@ export default function Comments({ mangaId, chapterId = null, session, onOpenAut
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
-
   const fetchComments = async () => {
     try {
       let query = supabase
         .from('comments')
-        .select(`
-          id,
-          manga_id,
-          chapter_id,
-          user_id,
-          content,
-          created_at,
-          profiles (
-            username,
-            avatar_url
-          )
-        `)
+        .select('*')
         .eq('manga_id', mangaId)
         .order('created_at', { ascending: false });
 
@@ -102,7 +90,6 @@ export default function Comments({ mangaId, chapterId = null, session, onOpenAut
         <h3 className="text-lg font-bold text-white">Comments ({comments.length})</h3>
       </div>
 
-      
       <form onSubmit={handleSubmit} className="mb-8">
         <div className="flex gap-3">
           <input
@@ -130,7 +117,6 @@ export default function Comments({ mangaId, chapterId = null, session, onOpenAut
         </div>
       </form>
 
-      
       {loading ? (
         <div className="text-center py-6">
           <Loader2 className="w-6 h-6 text-pink-500 animate-spin mx-auto" />
@@ -142,9 +128,7 @@ export default function Comments({ mangaId, chapterId = null, session, onOpenAut
       ) : (
         <div className="space-y-4">
           {comments.map((comment) => {
-            const profile = comment.profiles;
-            const authorName = profile?.username || session?.user?.email?.split('@')[0] || 'User';
-            const avatarUrl = profile?.avatar_url;
+            const authorName = session?.user?.email?.split('@')[0] || 'User';
             const isOwner = session?.user?.id === comment.user_id;
 
             return (
@@ -153,17 +137,9 @@ export default function Comments({ mangaId, chapterId = null, session, onOpenAut
                 className="bg-[#0a0c10]/60 border border-pink-500/5 rounded-xl p-4 flex items-start justify-between gap-4"
               >
                 <div className="flex items-start gap-3">
-                  {avatarUrl ? (
-                    <img
-                      src={avatarUrl}
-                      alt={authorName}
-                      className="w-8 h-8 rounded-full object-cover border border-pink-500/30"
-                    />
-                  ) : (
-                    <div className="w-8 h-8 rounded-full bg-pink-500/20 border border-pink-500/30 flex items-center justify-center font-bold text-xs text-pink-400 uppercase">
-                      {authorName.charAt(0)}
-                    </div>
-                  )}
+                  <div className="w-8 h-8 rounded-full bg-pink-500/20 border border-pink-500/30 flex items-center justify-center font-bold text-xs text-pink-400 uppercase">
+                    {authorName.charAt(0)}
+                  </div>
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-bold text-gray-200">
