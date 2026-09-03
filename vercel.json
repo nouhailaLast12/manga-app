@@ -9,7 +9,7 @@
       "destination": "https://uploads.mangadex.org/:path*"
     },
     {
-      "source": "/((?!api/).*)",
+      "source": "/((?!api/|assets/|[^?]*\\.(?:html|css|js|json|png|jpg|svg|ico)).*)",
       "destination": "/index.html"
     }
   ]
