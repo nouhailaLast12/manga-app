@@ -14,7 +14,6 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
   const [isFavorite, setIsFavorite] = useState(false);
   const [favLoading, setFavLoading] = useState(false);
 
-  
   useEffect(() => {
     if (propSession) {
       setSession(propSession);
@@ -31,7 +30,6 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
     return () => subscription.unsubscribe();
   }, [propSession]);
 
- 
   useEffect(() => {
     const checkIfFavorite = async () => {
       if (!session?.user?.id || !id) return;
@@ -53,7 +51,6 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
     checkIfFavorite();
   }, [id, session?.user?.id]);
 
- 
   useEffect(() => {
     const getMangaDetails = async () => {
       setLoading(true);
@@ -90,10 +87,24 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
         });
 
         const chaptersRes = await fetch(
-          `/api/mangadex/manga/${id}/feed?translatedLanguage[]=en&translatedLanguage[]=fr&order[chapter]=asc&limit=100`
+          `/api/mangadex/manga/${id}/feed?translatedLanguage[]=en&translatedLanguage[]=fr&order[chapter]=asc&limit=500`
         );
         const chaptersData = await chaptersRes.json();
-        setChapters(chaptersData.data || []);
+        const allChapters = chaptersData.data || [];
+
+        // تصفية الفصول لمنع التكرار (إظهار كل رقم فصل مرة واحدة فقط)
+        const uniqueChapters = [];
+        const seenChapterNumbers = new Set();
+
+        for (const ch of allChapters) {
+          const chNum = ch.attributes?.chapter;
+          if (chNum && !seenChapterNumbers.has(chNum)) {
+            seenChapterNumbers.add(chNum);
+            uniqueChapters.push(ch);
+          }
+        }
+
+        setChapters(uniqueChapters);
 
       } catch (error) {
         console.error('Error fetching manga details:', error);
@@ -104,7 +115,6 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
 
     if (id) getMangaDetails();
   }, [id]);
-
 
   const toggleFavorite = async () => {
     if (!session) {
@@ -184,7 +194,6 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
                 {manga.status}
               </span>
 
-              
               <button
                 onClick={toggleFavorite}
                 disabled={favLoading}
