@@ -70,7 +70,7 @@ export default function Favorites({ session: propSession, onOpenAuth }) {
                 ...item,
                 manga_title: title,
                 manga_cover: coverFileName
-                  ? `https://uploads.mangadex.org/covers/${item.manga_id}/${coverFileName}.256.jpg`
+                  ? `/api/uploads/covers/${item.manga_id}/${coverFileName}.256.jpg`
                   : null
               };
             } catch (err) {

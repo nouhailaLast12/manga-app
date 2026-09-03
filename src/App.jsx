@@ -43,7 +43,7 @@ function Home({ session, setShowAuthModal }) {
             description,
             status: item.attributes?.status?.toUpperCase() || 'ONGOING',
             cover: coverFileName
-              ? `http://uploads.mangadex.org/covers/${item.id}/${coverFileName}.256.jpg`
+              ? `/api/uploads/covers/${item.id}/${coverFileName}.256.jpg`
               : null
           };
         });
