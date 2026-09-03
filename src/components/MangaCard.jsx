@@ -83,12 +83,17 @@ export default function MangaCard({ manga, session, onOpenAuth }) {
         <div className="relative aspect-[3/4] rounded-xl overflow-hidden mb-3 bg-[#0a0c10] flex items-center justify-center">
           {manga.cover && !imgError ? (
             <img
-              src={manga.cover}
-              alt={title}
-              onError={() => setImgError(true)}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              loading="lazy"
-            />
+  src={manga.cover}
+  alt={title}
+  onLoad={() => console.log('IMAGE LOADED:', manga.cover)}
+  onError={(e) => {
+    console.error('IMAGE ERROR:', manga.cover);
+    console.error(e);
+    setImgError(true);
+  }}
+  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+  loading="lazy"
+/>
           ) : (
             <div className="flex flex-col items-center justify-center text-gray-600 gap-1 p-2 text-center">
               <ImageOff className="w-8 h-8 text-pink-500/30" />
