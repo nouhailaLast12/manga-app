@@ -28,24 +28,23 @@ export default function MangaViewer({ session: propSession, onOpenAuth }) {
       if (!chapterId) return;
       setLoading(true);
       setError(false);
+      window.scrollTo(0, 0);
 
       try {
-       
         const res = await fetch(`/api/mangadex/at-home/server/${chapterId}`);
         if (!res.ok) throw new Error('Failed to load chapter');
         const data = await res.json();
-        const baseUrl = data.baseUrl;
         const hash = data.chapter?.hash;
         const pageFiles = data.chapter?.data || [];
-        setPages(pageFiles.map((f) => `${baseUrl}/data/${hash}/${f}`));
-
         
+        // تعديل روابط الصور عبر wsrv.nl لتجاوز حظر MangaDex
+        setPages(pageFiles.map((f) => `https://wsrv.nl/?url=uploads.mangadex.org/data/${hash}/${f}&output=jpg`));
+
         const chInfoRes = await fetch(`/api/mangadex/chapter/${chapterId}`);
         const chInfoData = await chInfoRes.json();
         const mangaRel = chInfoData.data?.relationships?.find((r) => r.type === 'manga');
 
         if (mangaRel?.id) {
-          
           const feedRes = await fetch(
             `/api/mangadex/manga/${mangaRel.id}/feed?translatedLanguage[]=en&translatedLanguage[]=fr&order[chapter]=asc&limit=100`
           );
@@ -74,7 +73,6 @@ export default function MangaViewer({ session: propSession, onOpenAuth }) {
       <div>
         <Navbar session={session} onOpenAuth={onOpenAuth} />
 
-       
         <div className="sticky top-0 z-40 bg-[#141824]/90 backdrop-blur-md border-b border-pink-500/10 px-6 py-3 flex items-center justify-between">
           <button 
             onClick={() => navigate(-1)}
@@ -132,7 +130,6 @@ export default function MangaViewer({ session: propSession, onOpenAuth }) {
                 />
               ))}
 
-             
               <div className="flex items-center justify-between w-full max-w-3xl my-8 pt-6 border-t border-pink-500/10">
                 {prevChapterId ? (
                   <Link
