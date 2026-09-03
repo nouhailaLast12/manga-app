@@ -16,15 +16,17 @@ export const fetchPopularManga = async (searchQuery = '') => {
       const coverRel = item.relationships?.find((r) => r.type === 'cover_art');
       const coverFileName = coverRel?.attributes?.fileName;
 
+      // هنا درنا شرط: إلا كاين اسم الملف كنحطو الرابط الرسمي، وإلا ما كاينش كنحطو null باش تبان أيقونة No Image زوينة وما تخرجش ديك التصويرة الخايبة ديال MangaDex
+      const cover = coverFileName
+        ? `https://uploads.mangadex.org/covers/${item.id}/${coverFileName}.256.jpg`
+        : null;
+
       return {
         id: item.id,
         title: item.attributes.title.en || Object.values(item.attributes.title)[0] || 'Unknown Title',
         description: item.attributes.description?.en || 'No description available.',
         status: item.attributes.status?.toUpperCase() || 'ONGOING',
-   
-        cover: coverFileName
-          ? `https://uploads.mangadex.org/covers/${item.id}/${coverFileName}.256.jpg`
-          : null,
+        cover,
         genres: item.attributes.tags
           ?.filter((tag) => tag.attributes.group === 'genre')
           .map((tag) => tag.attributes.name.en) || ['MANGA']
