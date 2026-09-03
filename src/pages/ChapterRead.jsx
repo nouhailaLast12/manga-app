@@ -39,7 +39,17 @@ export default function MangaViewer({ session: propSession, onOpenAuth }) {
         const hash = data.chapter?.hash;
        
 const pageFiles = data.chapter?.data || [];
-        setPages(pageFiles.map((f) => `https://wsrv.nl/?url=uploads.mangadex.org/data/${hash}/${f}&output=jpg`));
+
+if (!baseUrl || !hash || pageFiles.length === 0) {
+  throw new Error('Invalid chapter data');
+}
+
+setPages(
+  pageFiles.map(
+    (fileName) =>
+      `${baseUrl}/data/${hash}/${fileName}`
+  )
+);
 
        
         const chInfoRes = await fetch(`/api/mangadex/chapter/${chapterId}`);
