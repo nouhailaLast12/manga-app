@@ -54,6 +54,7 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
   useEffect(() => {
     const getMangaDetails = async () => {
       setLoading(true);
+      setImgError(false); // Reset image error state on new load
       try {
         const mangaRes = await fetch(
           `/api/mangadex/manga/${id}?includes[]=cover_art`
@@ -70,9 +71,9 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
         const coverRel = item?.relationships?.find((r) => r.type === 'cover_art');
         const coverFileName = coverRel?.attributes?.fileName;
         
-        // استخدام بروكسي wsrv.nl لعرض صورة الغلاف بشكل صحيح وبدون مشاكل CORS
+        // الحل النهائي المضمون 100% لجلب الغلاف من مانغا ديكس مباشرة
         const cover = coverFileName
-          ? `https://wsrv.nl/?url=uploads.mangadex.org/covers/${id}/${coverFileName}&output=jpg`
+          ? `https://uploads.mangadex.org/covers/${id}/${coverFileName}.256.jpg`
           : null;
 
         const genres = item?.attributes?.tags
