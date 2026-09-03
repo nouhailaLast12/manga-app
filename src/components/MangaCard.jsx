@@ -16,7 +16,6 @@ export default function MangaCard({ manga, session, onOpenAuth }) {
     ? manga.description
     : manga.attributes?.description?.en || 'No description available.';
 
- 
   useEffect(() => {
     const checkFavoriteStatus = async () => {
       if (!session?.user || !manga.id) return;
@@ -30,13 +29,12 @@ export default function MangaCard({ manga, session, onOpenAuth }) {
 
         if (data) setIsFavorite(true);
       } catch (err) {
-        
+        // Handle error silently
       }
     };
 
     checkFavoriteStatus();
   }, [session, manga.id]);
-
 
   const toggleFavorite = async () => {
     if (!session?.user) {
@@ -47,7 +45,6 @@ export default function MangaCard({ manga, session, onOpenAuth }) {
     setFavLoading(true);
     try {
       if (isFavorite) {
-       
         await supabase
           .from('favorites')
           .delete()
@@ -56,7 +53,6 @@ export default function MangaCard({ manga, session, onOpenAuth }) {
 
         setIsFavorite(false);
       } else {
-        
         await supabase
           .from('favorites')
           .insert([
@@ -83,17 +79,20 @@ export default function MangaCard({ manga, session, onOpenAuth }) {
         <div className="relative aspect-[3/4] rounded-xl overflow-hidden mb-3 bg-[#0a0c10] flex items-center justify-center">
           {manga.cover && !imgError ? (
             <img
-  src={manga.cover}
-  alt={title}
-  onLoad={() => console.log('IMAGE LOADED:', manga.cover)}
-  onError={(e) => {
-    console.error('IMAGE ERROR:', manga.cover);
-    console.error(e);
-    setImgError(true);
-  }}
-  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-  loading="lazy"
-/>
+              src={manga.cover}
+              alt={title}
+              onError={() => {
+                setImgError(true);
+              }}
+              onLoad={(e) => {
+                // تصفية إضافية: إذا كانت الصورة الناتجة صغيرة جداً أو عبارة عن البلايسهولدر المعروف، نعتبرها خطأ
+                if (e.target.naturalWidth < 50) {
+                  setImgError(true);
+                }
+              }}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              loading="lazy"
+            />
           ) : (
             <div className="flex flex-col items-center justify-center text-gray-600 gap-1 p-2 text-center">
               <ImageOff className="w-8 h-8 text-pink-500/30" />
@@ -101,7 +100,6 @@ export default function MangaCard({ manga, session, onOpenAuth }) {
             </div>
           )}
 
-          
           <button
             onClick={toggleFavorite}
             disabled={favLoading}
