@@ -3,15 +3,26 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import Navbar from '../components/Navbar';
 import Comments from '../components/Comments';
-import { ArrowLeft, Loader2, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  ArrowLeft,
+  Loader2,
+  RefreshCw,
+  ChevronLeft,
+  ChevronRight
+} from 'lucide-react';
 
-export default function MangaViewer({ session: propSession, onOpenAuth }) {
+export default function MangaViewer({
+  session: propSession,
+  onOpenAuth
+}) {
   const { chapterId } = useParams();
   const navigate = useNavigate();
+
   const [pages, setPages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [session, setSession] = useState(propSession);
+
   const [prevChapterId, setPrevChapterId] = useState(null);
   const [nextChapterId, setNextChapterId] = useState(null);
 
@@ -19,146 +30,441 @@ export default function MangaViewer({ session: propSession, onOpenAuth }) {
     if (propSession) {
       setSession(propSession);
     } else {
-      supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
+      supabase.auth
+        .getSession()
+        .then(({ data: { session } }) => {
+          setSession(session);
+        });
     }
   }, [propSession]);
 
   useEffect(() => {
     const fetchChapterAndInfo = async () => {
       if (!chapterId) return;
+
       setLoading(true);
       setError(false);
+
+      setPages([]);
+      setPrevChapterId(null);
+      setNextChapterId(null);
+
       window.scrollTo(0, 0);
 
       try {
-        const res = await fetch(`/api/mangadex/at-home/server/${chapterId}`);
-        if (!res.ok) throw new Error('Failed to load chapter');
+        // =========================
+        // FETCH CHAPTER PAGES
+        // =========================
+
+        const res = await fetch(
+          `/api/mangadex/at-home/server/${chapterId}`
+        );
+
+        if (!res.ok) {
+          throw new Error('Failed to load chapter');
+        }
+
         const data = await res.json();
+
+        const baseUrl = data.baseUrl;
         const hash = data.chapter?.hash;
         const pageFiles = data.chapter?.data || [];
-        
-        // تعديل روابط الصور عبر wsrv.nl لتجاوز حظر MangaDex
-        setPages(pageFiles.map((f) => `https://wsrv.nl/?url=uploads.mangadex.org/data/${hash}/${f}&output=jpg`));
 
-        const chInfoRes = await fetch(`/api/mangadex/chapter/${chapterId}`);
+        if (!baseUrl || !hash || pageFiles.length === 0) {
+          throw new Error('Invalid chapter data');
+        }
+
+        const imageUrls = pageFiles.map((fileName) => {
+          const imageUrl =
+            `${baseUrl}/data/${hash}/${fileName}`;
+
+          return `https://wsrv.nl/?url=${encodeURIComponent(
+            imageUrl
+          )}`;
+        });
+
+        setPages(imageUrls);
+
+
+        // =========================
+        // FETCH CHAPTER INFO
+        // =========================
+
+        const chInfoRes = await fetch(
+          `/api/mangadex/chapter/${chapterId}`
+        );
+
+        if (!chInfoRes.ok) {
+          throw new Error('Failed to load chapter info');
+        }
+
         const chInfoData = await chInfoRes.json();
-        const mangaRel = chInfoData.data?.relationships?.find((r) => r.type === 'manga');
+
+        const mangaRel =
+          chInfoData.data?.relationships?.find(
+            (relation) => relation.type === 'manga'
+          );
+
+
+        // =========================
+        // FETCH MANGA CHAPTERS
+        // =========================
 
         if (mangaRel?.id) {
-          const feedRes = await fetch(
-            `/api/mangadex/manga/${mangaRel.id}/feed?translatedLanguage[]=en&translatedLanguage[]=fr&order[chapter]=asc&limit=100`
-          );
-          const feedData = await feedRes.json();
-          const allChapters = feedData.data || [];
 
-          const currentIndex = allChapters.findIndex((c) => c.id === chapterId);
-          if (currentIndex !== -1) {
-            setPrevChapterId(currentIndex > 0 ? allChapters[currentIndex - 1].id : null);
-            setNextChapterId(currentIndex < allChapters.length - 1 ? allChapters[currentIndex + 1].id : null);
+          const feedRes = await fetch(
+            `/api/mangadex/manga/${mangaRel.id}/feed?translatedLanguage[]=en&translatedLanguage[]=fr&order[chapter]=asc&limit=500`
+          );
+
+          if (!feedRes.ok) {
+            throw new Error('Failed to load manga chapters');
           }
+
+          const feedData = await feedRes.json();
+
+          const allChapters =
+            feedData.data || [];
+
+
+          // =========================
+          // SORT CHAPTERS
+          // =========================
+
+          const sortedChapters =
+            [...allChapters].sort((a, b) => {
+
+              const aNum =
+                parseFloat(
+                  a.attributes?.chapter || 0
+                );
+
+              const bNum =
+                parseFloat(
+                  b.attributes?.chapter || 0
+                );
+
+              return aNum - bNum;
+            });
+
+
+          // =========================
+          // REMOVE DUPLICATES
+          // =========================
+
+          const chapterMap = new Map();
+
+          for (const chapter of sortedChapters) {
+
+            const chapterNumber =
+              chapter.attributes?.chapter;
+
+            if (!chapterNumber) continue;
+
+
+            // Prioritize current chapter
+            if (chapter.id === chapterId) {
+
+              chapterMap.set(
+                chapterNumber,
+                chapter
+              );
+
+            }
+
+            // Otherwise keep first version
+            else if (
+              !chapterMap.has(chapterNumber)
+            ) {
+
+              chapterMap.set(
+                chapterNumber,
+                chapter
+              );
+
+            }
+          }
+
+
+          const uniqueChapters =
+            Array.from(chapterMap.values());
+
+
+          // =========================
+          // FIND CURRENT CHAPTER
+          // =========================
+
+          const currentIndex =
+            uniqueChapters.findIndex(
+              (chapter) =>
+                chapter.id === chapterId
+            );
+
+
+          if (currentIndex !== -1) {
+
+            setPrevChapterId(
+
+              currentIndex > 0
+                ? uniqueChapters[
+                    currentIndex - 1
+                  ].id
+                : null
+
+            );
+
+
+            setNextChapterId(
+
+              currentIndex <
+              uniqueChapters.length - 1
+
+                ? uniqueChapters[
+                    currentIndex + 1
+                  ].id
+
+                : null
+
+            );
+
+          }
+
         }
+
       } catch (err) {
-        console.error('Error fetching chapter:', err);
+
+        console.error(
+          'Error fetching chapter:',
+          err
+        );
+
         setError(true);
+
       } finally {
+
         setLoading(false);
+
       }
     };
 
+
     fetchChapterAndInfo();
+
   }, [chapterId]);
 
+
   return (
+
     <div className="bg-[#0a0c10] min-h-screen text-white flex flex-col justify-between">
+
       <div>
-        <Navbar session={session} onOpenAuth={onOpenAuth} />
+
+        <Navbar
+          session={session}
+          onOpenAuth={onOpenAuth}
+        />
+
+
+        {/* CONTROL BAR */}
 
         <div className="sticky top-0 z-40 bg-[#141824]/90 backdrop-blur-md border-b border-pink-500/10 px-6 py-3 flex items-center justify-between">
-          <button 
+
+          <button
             onClick={() => navigate(-1)}
             className="flex items-center gap-2 text-xs font-bold text-gray-300 hover:text-pink-400 transition-colors cursor-pointer"
           >
-            <ArrowLeft className="w-4 h-4" /> Back
+
+            <ArrowLeft className="w-4 h-4" />
+
+            Back
+
           </button>
 
+
           <div className="flex items-center gap-3">
-            {prevChapterId ? (
+
+            {prevChapterId && (
+
               <Link
                 to={`/read/${prevChapterId}`}
                 className="flex items-center gap-1 text-xs bg-pink-500/10 border border-pink-500/20 px-3 py-1.5 rounded-lg text-pink-400 hover:bg-pink-500/20 transition-all"
               >
-                <ChevronLeft className="w-4 h-4" /> Prev
-              </Link>
-            ) : null}
 
-            {nextChapterId ? (
+                <ChevronLeft className="w-4 h-4" />
+
+                Prev
+
+              </Link>
+
+            )}
+
+
+            {nextChapterId && (
+
               <Link
                 to={`/read/${nextChapterId}`}
-                className="flex items-center gap-1 text-xs bg-pink-500/10 border border-pink-500/20 px-3 py-1.5 rounded-lg text-pink-400 hover:bg-pink-500/20 transition-all"
+                className="flex items-center gap-1 text-xs bg-pink-500 text-white px-3 py-1.5 rounded-lg hover:bg-pink-600 transition-all"
               >
-                Next <ChevronRight className="w-4 h-4" />
+
+                Next
+
+                <ChevronRight className="w-4 h-4" />
+
               </Link>
-            ) : null}
+
+            )}
+
           </div>
+
         </div>
 
+
+        {/* MAIN */}
+
         <main className="max-w-4xl mx-auto px-4 py-6 flex flex-col items-center">
+
+
           {loading ? (
+
             <div className="flex flex-col justify-center items-center h-[60vh] gap-3">
+
               <Loader2 className="w-10 h-10 text-pink-500 animate-spin" />
-              <p className="text-sm font-medium text-pink-400/80 animate-pulse">Loading chapter pages...</p>
+
+              <p className="text-sm font-medium text-pink-400/80 animate-pulse">
+
+                Loading chapter pages...
+
+              </p>
+
             </div>
+
           ) : error ? (
+
             <div className="text-center py-16 bg-[#141824] border border-pink-500/10 rounded-2xl p-8 max-w-md my-10">
-              <p className="text-gray-300 text-sm mb-4">Failed to load chapter pages.</p>
+
+              <p className="text-gray-300 text-sm mb-4">
+
+                Failed to load chapter pages.
+
+              </p>
+
+
               <button
                 onClick={() => window.location.reload()}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-pink-500/10 border border-pink-500/30 hover:bg-pink-500/20 text-pink-400 rounded-xl text-xs font-bold transition-all cursor-pointer"
               >
-                <RefreshCw className="w-4 h-4" /> Retry
+
+                <RefreshCw className="w-4 h-4" />
+
+                Retry
+
               </button>
+
             </div>
+
           ) : (
+
             <div className="w-full flex flex-col items-center gap-2">
+
+
+              {/* MANGA PAGES */}
+
               {pages.map((url, index) => (
+
                 <img
                   key={index}
                   src={url}
                   alt={`Page ${index + 1}`}
                   className="w-full max-w-3xl h-auto rounded-md shadow-lg"
                   loading="lazy"
+                  onError={(e) => {
+
+                    console.error(
+                      `Failed to load page ${
+                        index + 1
+                      }`,
+                      url
+                    );
+
+                  }}
                 />
+
               ))}
 
+
+              {/* BOTTOM NAVIGATION */}
+
               <div className="flex items-center justify-between w-full max-w-3xl my-8 pt-6 border-t border-pink-500/10">
+
+
                 {prevChapterId ? (
+
                   <Link
                     to={`/read/${prevChapterId}`}
                     className="flex items-center gap-2 text-sm bg-[#141824] border border-pink-500/20 px-5 py-2.5 rounded-xl text-pink-400 hover:bg-pink-500/10 transition-all font-bold"
                   >
-                    <ChevronLeft className="w-5 h-5" /> Previous Chapter
+
+                    <ChevronLeft className="w-5 h-5" />
+
+                    Previous Chapter
+
                   </Link>
-                ) : <div />}
+
+                ) : (
+
+                  <div />
+
+                )}
+
 
                 {nextChapterId ? (
+
                   <Link
                     to={`/read/${nextChapterId}`}
-                    className="flex items-center gap-2 text-sm bg-pink-500 text-white px-5 py-2.5 rounded-xl hover:bg-pink-600 transition-all font-bold shadow-lg shadow-pink-500/20"
+                    className="flex items-center gap-2 text-sm bg-pink-500 text-white px-5 py-2.5 rounded-xl hover:bg-pink-600 transition-all font-bold"
                   >
-                    Next Chapter <ChevronRight className="w-5 h-5" />
+
+                    Next Chapter
+
+                    <ChevronRight className="w-5 h-5" />
+
                   </Link>
-                ) : <div />}
+
+                ) : (
+
+                  <div />
+
+                )}
+
               </div>
+
             </div>
+
           )}
 
+
+          {/* COMMENTS */}
+
           {!loading && !error && (
+
             <div className="w-full max-w-3xl mt-6 border-t border-pink-500/10 pt-8">
-              <Comments mangaId={chapterId} chapterId={chapterId} session={session} onOpenAuth={onOpenAuth} />
+
+              <Comments
+                mangaId={chapterId}
+                chapterId={chapterId}
+                session={session}
+                onOpenAuth={onOpenAuth}
+              />
+
             </div>
+
           )}
+
         </main>
+
       </div>
+
     </div>
+
   );
+
 }
