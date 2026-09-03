@@ -69,8 +69,10 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
 
         const coverRel = item?.relationships?.find((r) => r.type === 'cover_art');
         const coverFileName = coverRel?.attributes?.fileName;
+        
+        // استخدام بروكسي wsrv.nl لعرض صورة الغلاف بشكل صحيح وبدون مشاكل CORS
         const cover = coverFileName
-          ? `/api/uploads/covers/${id}/${coverFileName}.512.jpg`
+          ? `https://wsrv.nl/?url=uploads.mangadex.org/covers/${id}/${coverFileName}&output=jpg`
           : null;
 
         const genres = item?.attributes?.tags
@@ -92,7 +94,7 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
         const chaptersData = await chaptersRes.json();
         const allChapters = chaptersData.data || [];
 
-        // تصفية الفصول لمنع التكرار (إظهار كل رقم فصل مرة واحدة فقط)
+        // تصفية الفصول لمنع التكرار
         const uniqueChapters = [];
         const seenChapterNumbers = new Set();
 
