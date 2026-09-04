@@ -37,9 +37,9 @@ function Home({ session, setShowAuthModal }) {
           const descObj = item.attributes?.description || {};
           const description = descObj.en || Object.values(descObj)[0] || 'No description available.';
 
-          // الرابط الرسمي من مانجاديكس مدوز عبر الـ Proxy لتفادي الـ Block
-          const mangadexCover = coverFileName 
-            ? `/api/page?url=${encodeURIComponent(`https://uploads.mangadex.org/covers/${item.id}/${coverFileName}.256.jpg`)}`
+          // الرابط المباشر الأصلي ديال MangaDex للكفرات
+          const directCover = coverFileName 
+            ? `https://uploads.mangadex.org/covers/${item.id}/${coverFileName}.256.jpg`
             : null;
 
           return {
@@ -47,7 +47,7 @@ function Home({ session, setShowAuthModal }) {
             title,
             description,
             status: item.attributes?.status?.toUpperCase() || 'ONGOING',
-            cover: mangadexCover
+            cover: directCover
           };
         });
 
