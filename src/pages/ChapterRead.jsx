@@ -95,50 +95,50 @@ export default function MangaViewer({ session: propSession, onOpenAuth }) {
   }, [chapterId]);
 
   return (
-    <div className="w-full">
-      {/* Top Control Bar */}
-      <div className="sticky top-0 z-40 bg-[#141824]/90 backdrop-blur-md border-b border-pink-500/10 px-6 py-3 flex items-center justify-between">
+    <div className="w-full overflow-x-hidden">
+      {/* Top Control Bar - Responsive padding and text size for mobile */}
+      <div className="sticky top-0 z-40 bg-[#141824]/95 backdrop-blur-md border-b border-pink-500/10 px-3 sm:px-6 py-2.5 flex items-center justify-between gap-2">
         <button 
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-xs font-bold text-gray-300 hover:text-pink-400 transition-colors cursor-pointer"
+          className="flex items-center gap-1.5 text-xs font-bold text-gray-300 hover:text-pink-400 transition-colors cursor-pointer shrink-0"
         >
-          <ArrowLeft className="w-4 h-4" /> Back
+          <ArrowLeft className="w-4 h-4" /> <span className="hidden sm:inline">Back</span>
         </button>
 
-        <span className="text-xs font-bold text-pink-400">
+        <span className="text-xs sm:text-sm font-bold text-pink-400 truncate text-center">
           {currentChapterNum ? `Chapter ${currentChapterNum}` : ''}
         </span>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 shrink-0">
           {prevChapterId && (
             <Link
               to={`/read/${prevChapterId}`}
-              className="flex items-center gap-1 text-xs bg-pink-500/10 border border-pink-500/20 px-3 py-1.5 rounded-lg text-pink-400 hover:bg-pink-500/20 transition-all"
+              className="flex items-center gap-0.5 sm:gap-1 text-xs bg-pink-500/10 border border-pink-500/20 px-2.5 py-1.5 rounded-lg text-pink-400 hover:bg-pink-500/20 transition-all font-medium"
             >
-              <ChevronLeft className="w-4 h-4" /> Prev
+              <ChevronLeft className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Prev</span>
             </Link>
           )}
 
           {nextChapterId && (
             <Link
               to={`/read/${nextChapterId}`}
-              className="flex items-center gap-1 text-xs bg-pink-500 text-white px-3 py-1.5 rounded-lg hover:bg-pink-600 transition-all font-bold shadow-md shadow-pink-500/20"
+              className="flex items-center gap-0.5 sm:gap-1 text-xs bg-pink-500 text-white px-2.5 py-1.5 rounded-lg hover:bg-pink-600 transition-all font-bold shadow-md shadow-pink-500/20"
             >
-              Next <ChevronRight className="w-4 h-4" />
+              <span className="hidden sm:inline">Next</span> <ChevronRight className="w-3.5 h-3.5" />
             </Link>
           )}
         </div>
       </div>
 
-      {/* Pages Container */}
-      <main className="max-w-4xl mx-auto px-4 py-6 flex flex-col items-center">
+      {/* Pages Container - Adjusted padding for mobile screens */}
+      <main className="max-w-4xl mx-auto px-1 sm:px-4 py-4 flex flex-col items-center">
         {loading ? (
           <div className="flex flex-col justify-center items-center h-[60vh] gap-3">
             <Loader2 className="w-10 h-10 text-pink-500 animate-spin" />
             <p className="text-sm font-medium text-pink-400/80 animate-pulse">Loading chapter pages...</p>
           </div>
         ) : error ? (
-          <div className="text-center py-16 bg-[#141824] border border-pink-500/10 rounded-2xl p-8 max-w-md my-10">
+          <div className="text-center py-16 bg-[#141824] border border-pink-500/10 rounded-2xl p-6 sm:p-8 max-w-md my-10 mx-4">
             <p className="text-gray-300 text-sm mb-4">Failed to load chapter pages.</p>
             <button
               onClick={() => window.location.reload()}
@@ -148,34 +148,34 @@ export default function MangaViewer({ session: propSession, onOpenAuth }) {
             </button>
           </div>
         ) : (
-          <div className="w-full flex flex-col items-center gap-2">
+          <div className="w-full flex flex-col items-center gap-1 sm:gap-2">
             {pages.map((url, index) => (
               <img
                 key={index}
                 src={url}
                 alt={`Page ${index + 1}`}
-                className="w-full max-w-3xl h-auto rounded-md shadow-lg"
+                className="w-full max-w-3xl h-auto rounded-none sm:rounded-md shadow-md sm:shadow-lg object-contain"
                 loading="lazy"
               />
             ))}
 
-            {/* Bottom Navigation */}
-            <div className="flex items-center justify-between w-full max-w-3xl my-8 pt-6 border-t border-pink-500/10">
+            {/* Bottom Navigation - Mobile Friendly */}
+            <div className="flex items-center justify-between w-full max-w-3xl my-6 px-2 sm:px-0 pt-6 border-t border-pink-500/10 gap-2">
               {prevChapterId ? (
                 <Link
                   to={`/read/${prevChapterId}`}
-                  className="flex items-center gap-2 text-sm bg-[#141824] border border-pink-500/20 px-5 py-2.5 rounded-xl text-pink-400 hover:bg-pink-500/10 transition-all font-bold"
+                  className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm bg-[#141824] border border-pink-500/20 px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl text-pink-400 hover:bg-pink-500/10 transition-all font-bold"
                 >
-                  <ChevronLeft className="w-5 h-5" /> Previous Chapter
+                  <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" /> Prev Chapter
                 </Link>
               ) : <div />}
 
               {nextChapterId ? (
                 <Link
                   to={`/read/${nextChapterId}`}
-                  className="flex items-center gap-2 text-sm bg-pink-500 text-white px-5 py-2.5 rounded-xl hover:bg-pink-600 transition-all font-bold shadow-lg shadow-pink-500/20"
+                  className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm bg-pink-500 text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl hover:bg-pink-600 transition-all font-bold shadow-lg shadow-pink-500/20"
                 >
-                  Next Chapter <ChevronRight className="w-5 h-5" />
+                  Next Chapter <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
                 </Link>
               ) : <div />}
             </div>
@@ -184,7 +184,7 @@ export default function MangaViewer({ session: propSession, onOpenAuth }) {
 
         {/* Comments */}
         {!loading && !error && (
-          <div className="w-full max-w-3xl mt-6 border-t border-pink-500/10 pt-8">
+          <div className="w-full max-w-3xl mt-6 px-2 sm:px-0 border-t border-pink-500/10 pt-8">
             <Comments mangaId={chapterId} chapterId={chapterId} session={session} onOpenAuth={onOpenAuth} />
           </div>
         )}
