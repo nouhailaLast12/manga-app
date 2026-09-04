@@ -73,7 +73,7 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
         
         // الحل النهائي المضمون 100% لجلب الغلاف من مانغا ديكس مباشرة
         const cover = coverFileName
-          ? `https://uploads.mangadex.org/covers/${id}/${coverFileName}.256.jpg`
+          ? `https://ttgjavukktyzelercrgq.supabase.co/storage/v1/object/public/covers/${id}.jpg`
           : null;
 
         const genres = item?.attributes?.tags

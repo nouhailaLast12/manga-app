@@ -44,7 +44,7 @@ function Home({ session, setShowAuthModal }) {
             status: item.attributes?.status?.toUpperCase() || 'ONGOING',
             // تم تصحيح الرابط هنا لاستعمال الرابط المباشر الرسمي لـ MangaDex
             cover: coverFileName
-              ? `https://uploads.mangadex.org/covers/${item.id}/${coverFileName}.256.jpg`
+              ? `https://ttgjavukktyzelercrgq.supabase.co/storage/v1/object/public/covers/${item.id}.jpg`
               : null
           };
         });
