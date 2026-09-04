@@ -54,7 +54,7 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
   useEffect(() => {
     const getMangaDetails = async () => {
       setLoading(true);
-      setImgError(false); // Reset image error state on new load
+      setImgError(false); 
       try {
         const mangaRes = await fetch(
           `/api/mangadex/manga/${id}?includes[]=cover_art`
@@ -71,9 +71,9 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
         const coverRel = item?.relationships?.find((r) => r.type === 'cover_art');
         const coverFileName = coverRel?.attributes?.fileName;
         
-        // الحل النهائي المضمون 100% لجلب الغلاف من مانغا ديكس مباشرة
+        // استخدام الرابط المباشر الأصلي ديال MangaDex للكفرات لضمان ظهور الصور بدون مشاكل
         const cover = coverFileName
-          ? `https://ttgjavukktyzelercrgq.supabase.co/storage/v1/object/public/covers/${id}.jpg`
+          ? `https://uploads.mangadex.org/covers/${id}/${coverFileName}.256.jpg`
           : null;
 
         const genres = item?.attributes?.tags
