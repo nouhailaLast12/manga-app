@@ -160,7 +160,7 @@ function App() {
         />
         <Route 
           path="/chapter/:chapterId" 
-          element={<ChapterRead session={session} onOpenAuth={() => setShowAuthModalاجل={session} onOpenAuth={() => setShowAuthModal(true)} />} 
+          element={<ChapterRead session={session} onOpenAuth={() => setShowAuthModal(true)} />} 
         />
       </Routes>
       <Footer />
