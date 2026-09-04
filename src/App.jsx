@@ -37,15 +37,17 @@ function Home({ session, setShowAuthModal }) {
           const descObj = item.attributes?.description || {};
           const description = descObj.en || Object.values(descObj)[0] || 'No description available.';
 
+          // الرابط الرسمي من مانجاديكس مدوز عبر الـ Proxy لتفادي الـ Block
+          const mangadexCover = coverFileName 
+            ? `/api/page?url=${encodeURIComponent(`https://uploads.mangadex.org/covers/${item.id}/${coverFileName}.256.jpg`)}`
+            : null;
+
           return {
             id: item.id,
             title,
             description,
             status: item.attributes?.status?.toUpperCase() || 'ONGOING',
-            // تم تصحيح الرابط هنا لاستعمال الرابط المباشر الرسمي لـ MangaDex
-            cover: coverFileName
-              ? `https://ttgjavukktyzelercrgq.supabase.co/storage/v1/object/public/covers/${item.id}.jpg`
-              : null
+            cover: mangadexCover
           };
         });
 
@@ -133,7 +135,6 @@ function App() {
           </div>
         </div>
       )}
-
       
       <Routes>
         <Route 
@@ -159,7 +160,7 @@ function App() {
         />
         <Route 
           path="/chapter/:chapterId" 
-          element={<ChapterRead session={session} onOpenAuth={() => setShowAuthModal(true)} />} 
+          element={<ChapterRead session={session} onOpenAuth={() => setShowAuthModalاجل={session} onOpenAuth={() => setShowAuthModal(true)} />} 
         />
       </Routes>
       <Footer />
