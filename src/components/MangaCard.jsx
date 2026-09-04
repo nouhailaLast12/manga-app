@@ -16,6 +16,30 @@ export default function MangaCard({ manga, session, onOpenAuth }) {
     ? manga.description
     : manga.attributes?.description?.en || 'No description available.';
 
+  // دالة ذكية لاستخراج أو اصلاح رابط الكفر باش ميطشاش وباش يدوز عبر الـ Proxy إيلا كان من مانجاديكس
+  const getCoverUrl = () => {
+    let cover = manga.cover;
+
+   
+    if (!cover && manga.relationships) {
+      const coverRel = manga.relationships.find(r => r.type === 'cover_art');
+      if (coverRel?.attributes?.fileName) {
+        cover = `https://uploads.mangadex.org/covers/${manga.id}/${coverRel.attributes.fileName}.256.jpg`;
+      }
+    }
+
+    if (!cover) return null;
+
+    
+    if (cover.includes('mangadex.org') || cover.includes('uploads.mangadex.org')) {
+      return `/api/page?url=${encodeURIComponent(cover)}`;
+    }
+
+    return cover;
+  };
+
+  const coverUrl = getCoverUrl();
+
   useEffect(() => {
     const checkFavoriteStatus = async () => {
       if (!session?.user || !manga.id) return;
@@ -57,7 +81,7 @@ export default function MangaCard({ manga, session, onOpenAuth }) {
               user_id: session.user.id,
               manga_id: manga.id,
               manga_title: title,
-              manga_cover: manga.cover
+              manga_cover: coverUrl
             }
           ]);
 
@@ -74,9 +98,9 @@ export default function MangaCard({ manga, session, onOpenAuth }) {
     <div className="bg-[#141824] rounded-2xl border border-pink-500/10 p-3 flex flex-col justify-between hover:border-pink-500/30 transition-all group shadow-lg">
       <div>
         <div className="relative aspect-[3/4] rounded-xl overflow-hidden mb-3 bg-[#0a0c10] flex items-center justify-center">
-          {manga.cover && !imgError ? (
+          {coverUrl && !imgError ? (
             <img
-              src={manga.cover}
+              src={coverUrl}
               alt={title}
               onError={() => setImgError(true)}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
