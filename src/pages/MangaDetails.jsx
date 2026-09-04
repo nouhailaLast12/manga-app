@@ -71,9 +71,9 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
         const coverRel = item?.relationships?.find((r) => r.type === 'cover_art');
         const coverFileName = coverRel?.attributes?.fileName;
         
-        // استخدام الرابط المباشر الأصلي ديال MangaDex للكفرات لضمان ظهور الصور بدون مشاكل
+        // رابط الغلاف مطابق تماماً للطريقة اللي كاتجيبها الصفحة الرئيسية
         const cover = coverFileName
-          ? `https://uploads.mangadex.org/covers/${id}/${coverFileName}.256.jpg`
+          ? `https://uploads.mangadex.org/covers/${id}/${coverFileName}`
           : null;
 
         const genres = item?.attributes?.tags
