@@ -31,26 +31,25 @@ export default function MangaViewer({ session: propSession, onOpenAuth }) {
       window.scrollTo(0, 0); 
 
       try {
-      
         const res = await fetch(`/api/mangadex/at-home/server/${chapterId}`);
         if (!res.ok) throw new Error('Failed to load chapter');
         const data = await res.json();
         const baseUrl = data.baseUrl;
         const hash = data.chapter?.hash;
        
-const pageFiles = data.chapter?.data || [];
+        const pageFiles = data.chapter?.data || [];
 
-if (!baseUrl || !hash || pageFiles.length === 0) {
-  throw new Error('Invalid chapter data');
-}
+        if (!baseUrl || !hash || pageFiles.length === 0) {
+          throw new Error('Invalid chapter data');
+        }
 
-setPages(
-  pageFiles.map(
-    (fileName) =>
-      `${baseUrl}/data/${hash}/${fileName}`
-  )
-);
-
+        // استخدام الـ Proxy المخصص لصفحات الفصول لتفادي الحظر
+        setPages(
+          pageFiles.map(
+            (fileName) =>
+              `/api/page?url=${encodeURIComponent(`${baseUrl}/data/${hash}/${fileName}`)}`
+          )
+        );
        
         const chInfoRes = await fetch(`/api/mangadex/chapter/${chapterId}`);
         const chInfoData = await chInfoRes.json();
@@ -60,14 +59,12 @@ setPages(
         const mangaRel = chInfoData.data?.relationships?.find((r) => r.type === 'manga');
 
         if (mangaRel?.id) {
-          
           const feedRes = await fetch(
             `/api/mangadex/manga/${mangaRel.id}/feed?translatedLanguage[]=en&order[chapter]=asc&limit=500`
           );
           const feedData = await feedRes.json();
           const allChapters = feedData.data || [];
 
-        
           const uniqueChapters = [];
           const seenChapters = new Set();
 
