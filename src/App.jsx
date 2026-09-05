@@ -36,7 +36,7 @@ function Home({ session, setShowAuthModal }) {
           const descObj = item.attributes?.description || {};
           const description = descObj.en || Object.values(descObj)[0] || 'No description available.';
 
-          // رابط Supabase Storage بالاعتماد على الـ coverFileName الحقيقي المرفوع
+         
           const directCover = coverFileName 
             ? `https://ttgjavukktyzelercrgq.supabase.co/storage/v1/object/public/covers/${coverFileName}`
             : null;
