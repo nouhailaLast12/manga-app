@@ -27,14 +27,19 @@ function Home({ session, setShowAuthModal }) {
         const data = await response.json();
         
         const formattedData = (data.data || []).map((item) => {
+          const coverRel = item.relationships?.find((r) => r.type === 'cover_art');
+          const coverFileName = coverRel?.attributes?.fileName;
+
           const titleObj = item.attributes?.title || {};
           const title = titleObj.en || titleObj['ja-ro'] || titleObj.ja || Object.values(titleObj)[0] || 'Untitled';
 
           const descObj = item.attributes?.description || {};
           const description = descObj.en || Object.values(descObj)[0] || 'No description available.';
 
-          // الرابط الثابت والنهائي من Supabase Storage للـ Bucket ديال covers
-          const directCover = `https://ttgjavukktyzelercrgq.supabase.co/storage/v1/object/public/covers/${item.id}.jpg`;
+          // رابط Supabase Storage بالاعتماد على الـ coverFileName الحقيقي المرفوع
+          const directCover = coverFileName 
+            ? `https://ttgjavukktyzelercrgq.supabase.co/storage/v1/object/public/covers/${coverFileName}`
+            : null;
 
           return {
             id: item.id,
