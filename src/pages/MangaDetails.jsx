@@ -71,7 +71,7 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
         const coverRel = item?.relationships?.find((r) => r.type === 'cover_art');
         const coverFileName = coverRel?.attributes?.fileName;
         
-        // الرابط الثابت من Supabase Storage بالاعتماد على الـ coverFileName الحقيقي
+        // الرابط الثابت من Supabase Storage (متطابق مع الصفحة الرئيسية)
         const cover = coverFileName
           ? `https://ttgjavukktyzelercrgq.supabase.co/storage/v1/object/public/covers/${coverFileName}`
           : null;
