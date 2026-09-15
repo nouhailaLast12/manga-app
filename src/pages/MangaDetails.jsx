@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import Comments from '../components/Comments';
-import { BookOpen, ExternalLink, Loader2, Sparkles, Heart } from 'lucide-react';
+import { BookOpen, ExternalLink, Loader2, Sparkles, Heart, ImageOff } from 'lucide-react';
 
 export default function MangaDetails({ session: propSession, onOpenAuth }) {
   const { id } = useParams();
@@ -57,6 +57,7 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
       setLoading(true);
       setImgError(false);
       try {
+        // 1. جلب تفاصيل المانغا والفصول من MangaDex كالعادة
         const mangaRes = await fetch(
           `/api/mangadex/manga/${id}?includes[]=cover_art`
         );
@@ -69,28 +70,34 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
         const descObj = item?.attributes?.description || {};
         const description = descObj.en || Object.values(descObj)[0] || 'No description available.';
 
-        const coverRel = item?.relationships?.find((r) => r.type === 'cover_art');
-        const coverFileName = coverRel?.attributes?.fileName;
-
-        const directCover = coverFileName 
-          ? `https://uploads.mangadex.org/covers/${item.id}/${coverFileName}.256.jpg`
-          : null;
-
-        setImgSrc(directCover);
-
         const genres = item?.attributes?.tags
           ?.filter((tag) => tag.attributes?.group === 'genre')
           .map((tag) => tag.attributes?.name?.en) || [];
+
+        // 2. جلب صورة الغلاف البديلة والمضمونة 100% من Jikan API (MyAnimeList) بالبحث باسم المانغا
+        let coverUrl = null;
+        try {
+          const jikanRes = await fetch(`https://api.jikan.moe/v4/manga?q=${encodeURIComponent(title)}&limit=1`);
+          const jikanData = await jikanRes.json();
+          if (jikanData.data && jikanData.data.length > 0) {
+            coverUrl = jikanData.data[0].images?.jpg?.large_image_url || jikanData.data[0].images?.jpg?.image_url;
+          }
+        } catch (err) {
+          console.error("Error fetching cover from Jikan:", err);
+        }
+
+        setImgSrc(coverUrl);
 
         setManga({
           id: item.id,
           title,
           description,
           status: item?.attributes?.status?.toUpperCase() || 'ONGOING',
-          cover: directCover,
+          cover: coverUrl,
           genres
         });
 
+        // 3. جلب الفصول
         const chaptersRes = await fetch(
           `/api/mangadex/manga/${id}/feed?translatedLanguage[]=en&translatedLanguage[]=fr&order[chapter]=asc&limit=500`
         );
@@ -184,12 +191,9 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="flex flex-col items-center justify-center text-center p-6 bg-gradient-to-br from-pink-950/40 to-[#0a0c10] w-full h-full">
-              <Sparkles className="w-10 h-10 text-pink-500/50 mb-3 animate-pulse" />
-              <span className="text-xs font-bold text-pink-300 px-2 line-clamp-3">
-                {manga.title}
-              </span>
-              <span className="text-[10px] text-gray-500 mt-2">NouhaManga Exclusive</span>
+            <div className="flex flex-col items-center justify-center text-gray-600 gap-2 p-4 text-center">
+              <ImageOff className="w-10 h-10 text-pink-500/30" />
+              <span className="text-xs text-gray-500">No Image Available</span>
             </div>
           )}
         </div>
