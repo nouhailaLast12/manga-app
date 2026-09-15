@@ -10,7 +10,6 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
   const [chapters, setChapters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [imgSrc, setImgSrc] = useState(null);
-  const [triedFallback, setTriedFallback] = useState(false);
   const [imgError, setImgError] = useState(false);
   const [session, setSession] = useState(propSession);
   const [isFavorite, setIsFavorite] = useState(false);
@@ -54,19 +53,13 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
   }, [id, session?.user?.id]);
 
   const handleImgError = () => {
-    if (!triedFallback && manga?.fallbackCover) {
-      setImgSrc(manga.fallbackCover);
-      setTriedFallback(true);
-    } else {
-      setImgError(true);
-    }
+    setImgError(true);
   };
 
   useEffect(() => {
     const getMangaDetails = async () => {
       setLoading(true);
       setImgError(false);
-      setTriedFallback(false);
       try {
         const mangaRes = await fetch(
           `/api/mangadex/manga/${id}?includes[]=cover_art`
@@ -83,17 +76,12 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
         const coverRel = item?.relationships?.find((r) => r.type === 'cover_art');
         const coverFileName = coverRel?.attributes?.fileName;
 
-        // استخدام الـ Proxy (weserv) لتجاوز حظر الـ Hotlinking ديال MangaDex
-        const directCover = coverFileName 
-          ? `https://images.weserv.nl/?url=uploads.mangadex.org/covers/${item.id}/${coverFileName}.256.jpg`
-          : null;
-
-        // رابط بديل بدون بروكسي للاحتياط
-        const fallbackCover = coverFileName 
+        // الحل النهائي: استعمال رابط MangaDex الرسمي الأصلي مباشرة
+        const coverUrl = coverFileName 
           ? `https://uploads.mangadex.org/covers/${item.id}/${coverFileName}.256.jpg`
           : null;
 
-        setImgSrc(directCover);
+        setImgSrc(coverUrl);
 
         const genres = item?.attributes?.tags
           ?.filter((tag) => tag.attributes?.group === 'genre')
@@ -104,8 +92,7 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
           title,
           description,
           status: item?.attributes?.status?.toUpperCase() || 'ONGOING',
-          cover: directCover,
-          fallbackCover,
+          cover: coverUrl,
           genres
         });
 
