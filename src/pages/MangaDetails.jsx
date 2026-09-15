@@ -57,7 +57,6 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
       setLoading(true);
       setImgError(false);
       try {
-        // 1. جلب تفاصيل المانغا والفصول من MangaDex كالعادة
         const mangaRes = await fetch(
           `/api/mangadex/manga/${id}?includes[]=cover_art`
         );
@@ -70,34 +69,28 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
         const descObj = item?.attributes?.description || {};
         const description = descObj.en || Object.values(descObj)[0] || 'No description available.';
 
+        const coverRel = item?.relationships?.find((r) => r.type === 'cover_art');
+        const coverFileName = coverRel?.attributes?.fileName;
+
+        const directCover = coverFileName 
+          ? `https://uploads.mangadex.org/covers/${item.id}/${coverFileName}.256.jpg`
+          : null;
+
+        setImgSrc(directCover);
+
         const genres = item?.attributes?.tags
           ?.filter((tag) => tag.attributes?.group === 'genre')
           .map((tag) => tag.attributes?.name?.en) || [];
-
-        // 2. جلب صورة الغلاف البديلة والمضمونة 100% من Jikan API (MyAnimeList) بالبحث باسم المانغا
-        let coverUrl = null;
-        try {
-          const jikanRes = await fetch(`https://api.jikan.moe/v4/manga?q=${encodeURIComponent(title)}&limit=1`);
-          const jikanData = await jikanRes.json();
-          if (jikanData.data && jikanData.data.length > 0) {
-            coverUrl = jikanData.data[0].images?.jpg?.large_image_url || jikanData.data[0].images?.jpg?.image_url;
-          }
-        } catch (err) {
-          console.error("Error fetching cover from Jikan:", err);
-        }
-
-        setImgSrc(coverUrl);
 
         setManga({
           id: item.id,
           title,
           description,
           status: item?.attributes?.status?.toUpperCase() || 'ONGOING',
-          cover: coverUrl,
+          cover: directCover,
           genres
         });
 
-        // 3. جلب الفصول
         const chaptersRes = await fetch(
           `/api/mangadex/manga/${id}/feed?translatedLanguage[]=en&translatedLanguage[]=fr&order[chapter]=asc&limit=500`
         );
