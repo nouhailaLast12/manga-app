@@ -75,14 +75,25 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
         const description = descObj.en || Object.values(descObj)[0] || 'No description available.';
 
       const coverRel = item?.relationships?.find((r) => r.type === 'cover_art');
-        const coverFileName = coverRel?.attributes?.fileName;
+        let coverFileName = coverRel?.attributes?.fileName;
 
-      
-       const directCover = coverFileName 
-          ? `https://images.weserv.nl/?url=uploads.mangadex.org/covers/${item.id}/${coverFileName}`
+        // إيلا ما كاش fileName في الـ relationships، نعيطو على الـ Cover API مباشرة باش نضمنو نلقاوها
+        if (!coverFileName) {
+          try {
+            const coverRes = await fetch(`/api/mangadex/cover?manga[]=${item.id}`);
+            const coverData = await coverRes.json();
+            if (coverData.data && coverData.data.length > 0) {
+              coverFileName = coverData.data[0].attributes?.fileName;
+            }
+          } catch (e) {
+            console.error("Error fetching cover separately:", e);
+          }
+        }
+
+        const directCover = coverFileName 
+          ? `https://uploads.mangadex.org/covers/${item.id}/${coverFileName}.256.jpg`
           : null;
 
-        console.log("Cover URL generated:", directCover); 
         setImgSrc(directCover);
 
         
