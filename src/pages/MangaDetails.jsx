@@ -73,9 +73,8 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
         const coverFileName = coverRel?.attributes?.fileName;
 
         const directCover = coverFileName 
-          ? `https://uploads.mangadex.org/covers/${item.id}/${coverFileName}.256.jpg`
-          : null;
-
+  ? `https://uploads.mangadex.org/covers/${item.id}/${coverFileName}.256.jpg`
+  : null;
         setImgSrc(directCover);
 
         const genres = item?.attributes?.tags
