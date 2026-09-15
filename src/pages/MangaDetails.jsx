@@ -83,14 +83,14 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
         const coverRel = item?.relationships?.find((r) => r.type === 'cover_art');
         const coverFileName = coverRel?.attributes?.fileName;
 
-        // الرابط الأول (بحجم 256)
+        // استخدام الـ Proxy (weserv) لتجاوز حظر الـ Hotlinking ديال MangaDex
         const directCover = coverFileName 
-          ? `https://uploads.mangadex.org/covers/${item.id}/${coverFileName}.256.jpg`
+          ? `https://images.weserv.nl/?url=uploads.mangadex.org/covers/${item.id}/${coverFileName}.256.jpg`
           : null;
 
-        // الرابط البديل (Fallback) بصيغة أخرى إذا لم ينجح الأول
+        // رابط بديل بدون بروكسي للاحتياط
         const fallbackCover = coverFileName 
-          ? `https://uploads.mangadex.org/covers/${item.id}/${coverFileName}`
+          ? `https://uploads.mangadex.org/covers/${item.id}/${coverFileName}.256.jpg`
           : null;
 
         setImgSrc(directCover);
