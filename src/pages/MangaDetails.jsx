@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import Comments from '../components/Comments';
-import { BookOpen, ExternalLink, Loader2, Sparkles, ImageOff, Heart } from 'lucide-react';
+import { BookOpen, ExternalLink, Loader2, Sparkles, Heart } from 'lucide-react';
 
 export default function MangaDetails({ session: propSession, onOpenAuth }) {
   const { id } = useParams();
@@ -52,16 +52,11 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
     checkIfFavorite();
   }, [id, session?.user?.id]);
 
-  const handleImgError = () => {
-    setImgError(true);
-  };
-
   useEffect(() => {
     const getMangaDetails = async () => {
       setLoading(true);
       setImgError(false);
       try {
-        // نفس الـ Endpoint والطريقة المستخدمة في Home
         const mangaRes = await fetch(
           `/api/mangadex/manga/${id}?includes[]=cover_art`
         );
@@ -74,29 +69,14 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
         const descObj = item?.attributes?.description || {};
         const description = descObj.en || Object.values(descObj)[0] || 'No description available.';
 
-      const coverRel = item?.relationships?.find((r) => r.type === 'cover_art');
-        let coverFileName = coverRel?.attributes?.fileName;
-
-        // إيلا ما كاش fileName في الـ relationships، نعيطو على الـ Cover API مباشرة باش نضمنو نلقاوها
-        if (!coverFileName) {
-          try {
-            const coverRes = await fetch(`/api/mangadex/cover?manga[]=${item.id}`);
-            const coverData = await coverRes.json();
-            if (coverData.data && coverData.data.length > 0) {
-              coverFileName = coverData.data[0].attributes?.fileName;
-            }
-          } catch (e) {
-            console.error("Error fetching cover separately:", e);
-          }
-        }
+        const coverRel = item?.relationships?.find((r) => r.type === 'cover_art');
+        const coverFileName = coverRel?.attributes?.fileName;
 
         const directCover = coverFileName 
           ? `https://uploads.mangadex.org/covers/${item.id}/${coverFileName}.256.jpg`
           : null;
 
         setImgSrc(directCover);
-
-        
 
         const genres = item?.attributes?.tags
           ?.filter((tag) => tag.attributes?.group === 'genre')
@@ -117,7 +97,6 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
         const chaptersData = await chaptersRes.json();
         const allChapters = chaptersData.data || [];
 
-        // تصفية الفصول لمنع التكرار
         const uniqueChapters = [];
         const seenChapterNumbers = new Set();
 
@@ -196,18 +175,21 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
     <main className="max-w-7xl mx-auto px-6 py-8">
       {/* Header / Info Section */}
       <div className="bg-[#141824] rounded-2xl border border-pink-500/10 p-6 mb-8 flex flex-col md:flex-row gap-8">
-        <div className="w-full md:w-64 aspect-[3/4] bg-[#0a0c10] rounded-xl overflow-hidden shrink-0 flex items-center justify-center border border-pink-500/10">
+        <div className="w-full md:w-64 aspect-[3/4] bg-[#0a0c10] rounded-xl overflow-hidden shrink-0 flex items-center justify-center border border-pink-500/10 relative">
           {imgSrc && !imgError ? (
             <img
               src={imgSrc}
               alt={manga.title}
-              onError={handleImgError}
+              onError={() => setImgError(true)}
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="flex flex-col items-center justify-center text-gray-600 gap-2">
-              <ImageOff className="w-10 h-10 text-pink-500/30" />
-              <span className="text-xs text-gray-500">No Image</span>
+            <div className="flex flex-col items-center justify-center text-center p-6 bg-gradient-to-br from-pink-950/40 to-[#0a0c10] w-full h-full">
+              <Sparkles className="w-10 h-10 text-pink-500/50 mb-3 animate-pulse" />
+              <span className="text-xs font-bold text-pink-300 px-2 line-clamp-3">
+                {manga.title}
+              </span>
+              <span className="text-[10px] text-gray-500 mt-2">NouhaManga Exclusive</span>
             </div>
           )}
         </div>
