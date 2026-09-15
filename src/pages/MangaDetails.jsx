@@ -79,7 +79,7 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
 
         // نفس رابط الغلاف تماماً المعتمد في الصفحة الرئيسية
         const directCover = coverFileName 
-          ? `https://uploads.mangadex.org/covers/${item.id}/${coverFileName}.256.jpg`
+          ? `https://images.weserv.nl/?url=uploads.mangadex.org/covers/${item.id}/${coverFileName}.256.jpg`
           : null;
 
         setImgSrc(directCover);
