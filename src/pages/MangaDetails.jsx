@@ -74,12 +74,12 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
         const descObj = item?.attributes?.description || {};
         const description = descObj.en || Object.values(descObj)[0] || 'No description available.';
 
-        const coverRel = item?.relationships?.find((r) => r.type === 'cover_art');
+      const coverRel = item?.relationships?.find((r) => r.type === 'cover_art');
         const coverFileName = coverRel?.attributes?.fileName;
 
-        // نفس رابط الغلاف تماماً المعتمد في الصفحة الرئيسية
+        // نستعملو بروكسي weserv.nl مباشرة مع تحديد الحجم بوضوح
         const directCover = coverFileName 
-          ? `https://images.weserv.nl/?url=uploads.mangadex.org/covers/${item.id}/${coverFileName}.256.jpg`
+          ? `https://images.weserv.nl/?url=uploads.mangadex.org/covers/${item.id}/${coverFileName}&w=400`
           : null;
 
         setImgSrc(directCover);
