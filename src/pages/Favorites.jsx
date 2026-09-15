@@ -46,43 +46,65 @@ export default function Favorites({ session: propSession, onOpenAuth }) {
           return;
         }
 
-        
-        const enrichedFavorites = await Promise.all(
-          dbData.map(async (item) => {
-            try {
-              const res = await fetch(
-                `/api/mangadex/manga/${item.manga_id}?includes[]=cover_art`
-              );
-              const json = await res.json();
-              const mangaData = json.data;
+   const enrichedFavorites = await Promise.all(
+  dbData.map(async (item) => {
+    try {
+      const res = await fetch(
+        `/api/mangadex/manga/${item.manga_id}?includes[]=cover_art`
+      );
 
-              const coverRel = mangaData?.relationships?.find((r) => r.type === 'cover_art');
-              const coverFileName = coverRel?.attributes?.fileName;
-              const titleObj = mangaData?.attributes?.title || {};
-              const title =
-                titleObj.en ||
-                titleObj['ja-ro'] ||
-                titleObj.ja ||
-                Object.values(titleObj)[0] ||
-                'Untitled Manga';
+      if (!res.ok) {
+        throw new Error(`MangaDex API error: ${res.status}`);
+      }
 
-              return {
-                ...item,
-                manga_title: title,
-                manga_cover: coverFileName
-                  ? `/api/uploads/covers/${item.manga_id}/${coverFileName}.256.jpg`
-                  : null
-              };
-            } catch (err) {
-              console.error(`Error fetching info for manga ${item.manga_id}:`, err);
-              return {
-                ...item,
-                manga_title: 'Manga Details Unavailable',
-                manga_cover: null
-              };
-            }
-          })
-        );
+      const json = await res.json();
+      const mangaData = json.data;
+
+      const coverRel = mangaData?.relationships?.find(
+        (r) => r.type === 'cover_art'
+      );
+
+      const coverFileName = coverRel?.attributes?.fileName;
+
+      const titleObj = mangaData?.attributes?.title || {};
+
+      const title =
+        titleObj.en ||
+        titleObj['ja-ro'] ||
+        titleObj.ja ||
+        Object.values(titleObj)[0] ||
+        'Untitled Manga';
+
+      // Original MangaDex cover URL
+      const rawCover = coverFileName
+        ? `https://uploads.mangadex.org/covers/${item.manga_id}/${coverFileName}.256.jpg`
+        : null;
+
+      // Use our own image proxy
+      const mangaCover = rawCover
+        ? `/api/page?url=${encodeURIComponent(rawCover)}`
+        : null;
+
+      return {
+        ...item,
+        manga_title: title,
+        manga_cover: mangaCover
+      };
+
+    } catch (err) {
+      console.error(
+        `Error fetching info for manga ${item.manga_id}:`,
+        err
+      );
+
+      return {
+        ...item,
+        manga_title: 'Manga Details Unavailable',
+        manga_cover: null
+      };
+    }
+  })
+);
 
         if (isMounted) setFavorites(enrichedFavorites);
       } catch (err) {
