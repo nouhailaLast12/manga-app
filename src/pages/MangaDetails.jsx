@@ -72,9 +72,15 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
         const coverRel = item?.relationships?.find((r) => r.type === 'cover_art');
         const coverFileName = coverRel?.attributes?.fileName;
 
-        const directCover = coverFileName 
-  ? `https://uploads.mangadex.org/covers/${item.id}/${coverFileName}.256.jpg`
-  : null;
+        const rawCover = coverFileName 
+          ? `https://uploads.mangadex.org/covers/${item.id}/${coverFileName}.256.jpg`
+          : null;
+
+        // تمرير الرابط عبر الـ Proxy لتفادي حماية Hotlinking
+        const directCover = rawCover 
+          ? `https://images.weserv.nl/?url=${encodeURIComponent(rawCover)}`
+          : null;
+
         setImgSrc(directCover);
 
         const genres = item?.attributes?.tags

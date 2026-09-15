@@ -16,13 +16,22 @@ export default function MangaCard({ manga, session, onOpenAuth }) {
     ? manga.description
     : manga.attributes?.description?.en || 'No description available.';
 
-  // استخراج رابط الغلاف المباشر من مانجاديكس
- const rawCover = coverFileName 
-  ? `https://uploads.mangadex.org/covers/${item.id}/${coverFileName}.256.jpg`
-  : null;
+  // استخراج وتعديل رابط الغلاف ليمر عبر Proxy الصور
+  const getCoverUrl = () => {
+    let cover = manga.cover;
 
+    if (!cover && manga.relationships) {
+      const coverRel = manga.relationships.find(r => r.type === 'cover_art');
+      if (coverRel?.attributes?.fileName) {
+        cover = `https://uploads.mangadex.org/covers/${manga.id}/${coverRel.attributes.fileName}.256.jpg`;
+      }
+    }
 
-const directCover = rawCover ? `https://images.weserv.nl/?url=${encodeURIComponent(rawCover)}` : null;
+    if (!cover) return null;
+
+    // تمرير الرابط عبر الـ Proxy لتفادي الحماية
+    return `https://images.weserv.nl/?url=${encodeURIComponent(cover)}`;
+  };
 
   const coverUrl = getCoverUrl();
 
