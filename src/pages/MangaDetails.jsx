@@ -69,23 +69,21 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
         const descObj = item?.attributes?.description || {};
         const description = descObj.en || Object.values(descObj)[0] || 'No description available.';
 
- 
+        const coverRel = item?.relationships?.find(
+          (r) => r.type === 'cover_art'
+        );
 
-const coverRel = item?.relationships?.find(
-  (r) => r.type === 'cover_art'
-);
+        const coverFileName = coverRel?.attributes?.fileName;
 
-const coverFileName = coverRel?.attributes?.fileName;
+        const rawCover = coverFileName
+          ? `https://uploads.mangadex.org/covers/${item.id}/${coverFileName}.256.jpg`
+          : null;
 
-const rawCover = coverFileName
-  ? `https://uploads.mangadex.org/covers/${item.id}/${coverFileName}.256.jpg`
-  : null;
+        const directCover = rawCover
+          ? `/api/page?url=${encodeURIComponent(rawCover)}`
+          : null;
 
-const directCover = rawCover
-  ? `/api/page?url=${encodeURIComponent(rawCover)}`
-  : null;
-
-setImgSrc(directCover);
+        setImgSrc(directCover);
 
         const genres = item?.attributes?.tags
           ?.filter((tag) => tag.attributes?.group === 'genre')
@@ -100,22 +98,27 @@ setImgSrc(directCover);
           genres
         });
 
+        // جلب الفصول مع تحديد limit=100 لمنع مشاكل الذاكرة
         const chaptersRes = await fetch(
-          `/api/mangadex/manga/${id}/feed?translatedLanguage[]=en&translatedLanguage[]=fr&order[chapter]=asc&limit=500`
+          `/api/mangadex/manga/${id}/feed?translatedLanguage[]=en&translatedLanguage[]=fr&order[chapter]=asc&limit=100`
         );
         const chaptersData = await chaptersRes.json();
         const allChapters = chaptersData.data || [];
 
-        const uniqueChapters = [];
-        const seenChapterNumbers = new Set();
+        // ترتيب دقيق بالفصول الرقمية وتفادي التكرار
+        const sortedChapters = [...allChapters].sort((a, b) => {
+          const aNum = parseFloat(a.attributes?.chapter || 0);
+          const bNum = parseFloat(b.attributes?.chapter || 0);
+          return aNum - bNum;
+        });
 
-        for (const ch of allChapters) {
-          const chNum = ch.attributes?.chapter;
-          if (chNum && !seenChapterNumbers.has(chNum)) {
-            seenChapterNumbers.add(chNum);
-            uniqueChapters.push(ch);
-          }
-        }
+        const uniqueChapters = sortedChapters.filter(
+          (ch, index, self) =>
+            index ===
+            self.findIndex(
+              (c) => c.attributes?.chapter === ch.attributes?.chapter
+            )
+        );
 
         setChapters(uniqueChapters);
 
