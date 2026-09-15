@@ -78,9 +78,8 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
         const coverFileName = coverRel?.attributes?.fileName;
 
       
-       
-        const directCover = coverFileName 
-          ? `https://images.weserv.nl/?url=uploads.mangadex.org/covers/${item.id}/${coverFileName}&output=jpg`
+       const directCover = coverFileName 
+          ? `https://images.weserv.nl/?url=uploads.mangadex.org/covers/${item.id}/${coverFileName}`
           : null;
 
         console.log("Cover URL generated:", directCover); 
