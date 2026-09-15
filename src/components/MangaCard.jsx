@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Heart, ArrowRight, ImageOff } from 'lucide-react';
+import { Heart, ArrowRight, Sparkles } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 
@@ -16,11 +16,10 @@ export default function MangaCard({ manga, session, onOpenAuth }) {
     ? manga.description
     : manga.attributes?.description?.en || 'No description available.';
 
-  // دالة ذكية لاستخراج أو اصلاح رابط الكفر باش ميطشاش وباش يدوز عبر الـ Proxy إيلا كان من مانجاديكس
+  // استخراج رابط الغلاف المباشر من مانجاديكس
   const getCoverUrl = () => {
     let cover = manga.cover;
 
-   
     if (!cover && manga.relationships) {
       const coverRel = manga.relationships.find(r => r.type === 'cover_art');
       if (coverRel?.attributes?.fileName) {
@@ -28,14 +27,7 @@ export default function MangaCard({ manga, session, onOpenAuth }) {
       }
     }
 
-    if (!cover) return null;
-
-    
-    if (cover.includes('mangadex.org') || cover.includes('uploads.mangadex.org')) {
-      return `/api/page?url=${encodeURIComponent(cover)}`;
-    }
-
-    return cover;
+    return cover || null;
   };
 
   const coverUrl = getCoverUrl();
@@ -107,9 +99,11 @@ export default function MangaCard({ manga, session, onOpenAuth }) {
               loading="lazy"
             />
           ) : (
-            <div className="flex flex-col items-center justify-center text-gray-600 gap-1 p-2 text-center">
-              <ImageOff className="w-8 h-8 text-pink-500/30" />
-              <span className="text-[10px] text-gray-500">No Image</span>
+            <div className="flex flex-col items-center justify-center text-center p-4 bg-gradient-to-br from-pink-950/40 to-[#0a0c10] w-full h-full">
+              <Sparkles className="w-8 h-8 text-pink-500/50 mb-2 animate-pulse" />
+              <span className="text-[11px] font-bold text-pink-300 line-clamp-2 px-1">
+                {title}
+              </span>
             </div>
           )}
 
