@@ -61,6 +61,7 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
       setLoading(true);
       setImgError(false);
       try {
+        // نفس الـ Endpoint والطريقة المستخدمة في Home
         const mangaRes = await fetch(
           `/api/mangadex/manga/${id}?includes[]=cover_art`
         );
@@ -76,12 +77,12 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
         const coverRel = item?.relationships?.find((r) => r.type === 'cover_art');
         const coverFileName = coverRel?.attributes?.fileName;
 
-        // الحل النهائي: استعمال رابط MangaDex الرسمي الأصلي مباشرة
-        const coverUrl = coverFileName 
+        // نفس رابط الغلاف تماماً المعتمد في الصفحة الرئيسية
+        const directCover = coverFileName 
           ? `https://uploads.mangadex.org/covers/${item.id}/${coverFileName}.256.jpg`
           : null;
 
-        setImgSrc(coverUrl);
+        setImgSrc(directCover);
 
         const genres = item?.attributes?.tags
           ?.filter((tag) => tag.attributes?.group === 'genre')
@@ -92,7 +93,7 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
           title,
           description,
           status: item?.attributes?.status?.toUpperCase() || 'ONGOING',
-          cover: coverUrl,
+          cover: directCover,
           genres
         });
 
