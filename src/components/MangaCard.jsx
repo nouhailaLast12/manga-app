@@ -32,13 +32,12 @@ const getCoverUrl = () => {
 
   if (!cover) return null;
 
-  // استعمال Image Proxy الخاص بالمشروع
-  if (cover.startsWith('/api/pages')) {
+  if (cover.startsWith('/api/page')) {
     return cover;
   }
 
   if (cover.startsWith('http')) {
-    return `/api/pages?url=${encodeURIComponent(cover)}`;
+    return `/api/page?url=${encodeURIComponent(cover)}`;
   }
 
   return cover;

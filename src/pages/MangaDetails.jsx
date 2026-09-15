@@ -69,7 +69,9 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
         const descObj = item?.attributes?.description || {};
         const description = descObj.en || Object.values(descObj)[0] || 'No description available.';
 
-       const coverRel = item?.relationships?.find(
+ 
+
+const coverRel = item?.relationships?.find(
   (r) => r.type === 'cover_art'
 );
 
@@ -79,9 +81,8 @@ const rawCover = coverFileName
   ? `https://uploads.mangadex.org/covers/${item.id}/${coverFileName}.256.jpg`
   : null;
 
-// Our own image proxy
 const directCover = rawCover
-  ? `/api/pages?url=${encodeURIComponent(rawCover)}`
+  ? `/api/page?url=${encodeURIComponent(rawCover)}`
   : null;
 
 setImgSrc(directCover);
