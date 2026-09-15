@@ -1,397 +1,440 @@
-import { useState, useEffect, useRef } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import {
-  Search,
-  Dices,
-  Heart,
-  Bell,
-  ChevronDown,
-  LogOut,
-  User,
-  X
-} from 'lucide-react';
-import NinouMangaLogo from './NinouMangaLogo';
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
+import Navbar from '../components/Navbar';
+import Comments from '../components/Comments';
 
-const GENRES = [
-  'Action',
-  'Adventure',
-  'Comedy',
-  'Drama',
-  'Fantasy',
-  'Horror',
-  'Isekai',
-  'Mystery',
-  'Romance',
-  'Sci-Fi',
-  'Slice of Life',
-  'Sports'
-];
+import {
+  ArrowLeft,
+  Loader2,
+  RefreshCw,
+  ChevronLeft,
+  ChevronRight
+} from 'lucide-react';
 
-export default function Navbar({ session, onOpenAuth }) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showUserMenu, setShowUserMenu] = useState(false);
-  const [showGenresMenu, setShowGenresMenu] = useState(false);
-  const [showMobileSearch, setShowMobileSearch] = useState(false);
-  const [randomLoading, setRandomLoading] = useState(false);
-
+export default function MangaViewer({
+  session: propSession,
+  onOpenAuth
+}) {
+  const { chapterId } = useParams();
   const navigate = useNavigate();
 
-  const genresRef = useRef(null);
-  const userMenuRef = useRef(null);
+  const [pages, setPages] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [session, setSession] = useState(propSession);
 
-  // Close dropdowns when clicking outside
+  const [prevChapterId, setPrevChapterId] = useState(null);
+  const [nextChapterId, setNextChapterId] = useState(null);
+
+  /* ==========================================
+     SESSION
+  ========================================== */
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        genresRef.current &&
-        !genresRef.current.contains(event.target)
-      ) {
-        setShowGenresMenu(false);
-      }
-
-      if (
-        userMenuRef.current &&
-        !userMenuRef.current.contains(event.target)
-      ) {
-        setShowUserMenu(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  // Search
-  const handleSearch = (e) => {
-    if (
-      (e.key === 'Enter' || e.type === 'click') &&
-      searchTerm.trim()
-    ) {
-      setShowGenresMenu(false);
-      setShowMobileSearch(false);
-
-      navigate(`/?search=${encodeURIComponent(searchTerm.trim())}`);
-    }
-  };
-
-  // Genre
-  const handleGenreSelect = (genre) => {
-    setShowGenresMenu(false);
-
-    navigate(`/?search=${encodeURIComponent(genre)}`);
-  };
-
-  // Random manga
-  const handleRandomManga = async () => {
-    setRandomLoading(true);
-    setShowGenresMenu(false);
-
-    try {
-      const res = await fetch('/api/mangadex/manga/random');
-
-      const data = await res.json();
-
-      if (data?.data?.id) {
-        navigate(`/manga/${data.data.id}`);
-      }
-    } catch (error) {
-      console.error('Error fetching random manga:', error);
-    } finally {
-      setRandomLoading(false);
-    }
-  };
-
-  // Favorites
-  const handleFavoritesClick = () => {
-    setShowGenresMenu(false);
-
-    if (!session) {
-      if (onOpenAuth) {
-        onOpenAuth();
-      }
+    if (propSession) {
+      setSession(propSession);
     } else {
-      navigate('/favorites');
+      supabase.auth
+        .getSession()
+        .then(({ data: { session } }) => {
+          setSession(session);
+        });
     }
-  };
+  }, [propSession]);
 
-  // Logout
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
+  /* ==========================================
+     FETCH CHAPTER
+  ========================================== */
+  useEffect(() => {
+    const fetchChapterAndInfo = async () => {
+      if (!chapterId) return;
 
-    setShowUserMenu(false);
+      setLoading(true);
+      setError(false);
+      setPages([]);
+      setPrevChapterId(null);
+      setNextChapterId(null);
 
-    navigate('/');
-  };
+      window.scrollTo(0, 0);
 
-  const userEmail = session?.user?.email || '';
-  const username = userEmail
-    ? userEmail.split('@')[0]
-    : 'Guest';
+      try {
+        const res = await fetch(
+          `/api/mangadex/at-home/server/${chapterId}`
+        );
+
+        if (!res.ok) {
+          throw new Error('Failed to load chapter');
+        }
+
+        const data = await res.json();
+
+        const baseUrl = data.baseUrl;
+        const hash = data.chapter?.hash;
+        const pageFiles = data.chapter?.data || [];
+
+        if (!baseUrl || !hash || pageFiles.length === 0) {
+          throw new Error('Invalid chapter data');
+        }
+
+        const imageUrls = pageFiles.map((fileName) => {
+          const imageUrl = `${baseUrl}/data/${hash}/${fileName}`;
+          return `https://wsrv.nl/?url=${encodeURIComponent(imageUrl)}`;
+        });
+
+        setPages(imageUrls);
+
+        const chInfoRes = await fetch(
+          `/api/mangadex/chapter/${chapterId}`
+        );
+
+        if (!chInfoRes.ok) {
+          throw new Error('Failed to load chapter info');
+        }
+
+        const chInfoData = await chInfoRes.json();
+
+        const mangaRel = chInfoData.data?.relationships?.find(
+          (relation) => relation.type === 'manga'
+        );
+
+        if (!mangaRel?.id) return;
+
+        const feedRes = await fetch(
+          `/api/mangadex/manga/${mangaRel.id}/feed?translatedLanguage[]=en&translatedLanguage[]=fr&order[chapter]=asc&limit=500`
+        );
+
+        if (!feedRes.ok) {
+          throw new Error('Failed to load manga chapters');
+        }
+
+        const feedData = await feedRes.json();
+        const allChapters = feedData.data || [];
+
+        const sortedChapters = [...allChapters].sort((a, b) => {
+          const aNum = parseFloat(a.attributes?.chapter || 0);
+          const bNum = parseFloat(b.attributes?.chapter || 0);
+          return aNum - bNum;
+        });
+
+        const uniqueChapters = sortedChapters.filter(
+          (ch, index, self) =>
+            index ===
+            self.findIndex(
+              (c) =>
+                c.attributes?.chapter === ch.attributes?.chapter
+            )
+        );
+
+        const currentIndex = uniqueChapters.findIndex(
+          (chapter) => chapter.id === chapterId
+        );
+
+        if (currentIndex !== -1) {
+          setPrevChapterId(
+            currentIndex > 0
+              ? uniqueChapters[currentIndex - 1].id
+              : null
+          );
+
+          setNextChapterId(
+            currentIndex < uniqueChapters.length - 1
+              ? uniqueChapters[currentIndex + 1].id
+              : null
+          );
+        }
+      } catch (err) {
+        console.error('Error fetching chapter:', err);
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchChapterAndInfo();
+  }, [chapterId]);
+
+  /* ==========================================
+     UI
+  ========================================== */
 
   return (
-    <nav className="bg-[#0f1117]/90 backdrop-blur-md border-b border-pink-500/10 sticky top-0 z-50 px-3 sm:px-6 py-3">
-
-      <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 sm:gap-4">
-
-        {/* ================= LOGO ================= */}
-        <Link
-          to="/"
-          className="cursor-pointer shrink-0"
-        >
-          <NinouMangaLogo />
-        </Link>
-
-
-        {/* ================= DESKTOP SEARCH ================= */}
-        <div className="flex-1 max-w-md relative hidden sm:block">
-
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            onKeyDown={handleSearch}
-            placeholder="Search titles..."
-            className="w-full bg-[#161a23] border border-pink-500/10 focus:border-pink-500/40 rounded-full py-2 pl-4 pr-10 text-sm text-gray-200 placeholder-gray-500 outline-none transition-all"
-          />
-
-          <Search
-            onClick={handleSearch}
-            className="w-4 h-4 text-pink-400 absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer hover:text-pink-300 transition-colors"
-          />
-
-        </div>
-
-
-        {/* ================= NAVIGATION ================= */}
-        <div className="flex items-center gap-2 sm:gap-4 md:gap-6 text-sm font-medium">
-
-
-          {/* ================= MOBILE SEARCH ================= */}
-          <button
-            onClick={() => setShowMobileSearch(!showMobileSearch)}
-            className="sm:hidden p-1.5 text-gray-300 hover:text-pink-400 transition-colors"
-            aria-label="Search"
-          >
-            {showMobileSearch ? (
-              <X className="w-5 h-5 text-pink-400" />
-            ) : (
-              <Search className="w-5 h-5 text-pink-400" />
-            )}
-          </button>
-
-
-          {/* ================= GENRES ================= */}
-          <div
-            className="relative hidden sm:block"
-            ref={genresRef}
-          >
-
-            <button
-              onClick={() => setShowGenresMenu(!showGenresMenu)}
-              className="flex items-center gap-1.5 text-gray-300 hover:text-pink-400 transition-colors cursor-pointer py-1"
-            >
-
-              <span>Genres</span>
-
-              <ChevronDown
-                className={`w-4 h-4 text-pink-400/70 transition-transform ${
-                  showGenresMenu ? 'rotate-180' : ''
-                }`}
-              />
-
-            </button>
-
-
-            {showGenresMenu && (
-              <div className="absolute top-full left-0 mt-2 w-48 bg-[#141824] border border-pink-500/20 rounded-2xl shadow-xl p-2 grid grid-cols-1 gap-1 z-50">
-
-                {GENRES.map((genre) => (
-                  <button
-                    key={genre}
-                    onClick={() => handleGenreSelect(genre)}
-                    className="text-left px-3 py-1.5 text-xs font-semibold text-gray-300 hover:text-pink-400 hover:bg-pink-500/10 rounded-xl transition-all cursor-pointer"
-                  >
-                    {genre}
-                  </button>
-                ))}
-
-              </div>
-            )}
-
-          </div>
-
-
-          {/* ================= RANDOM ================= */}
-          <button
-            onClick={handleRandomManga}
-            disabled={randomLoading}
-            className="hidden sm:flex items-center gap-1.5 text-gray-300 hover:text-pink-400 transition-colors cursor-pointer disabled:opacity-50"
-          >
-
-            <Dices
-              className={`w-4 h-4 text-pink-400 ${
-                randomLoading ? 'animate-spin' : ''
-              }`}
-            />
-
-            <span className="hidden md:inline">
-              Random
-            </span>
-
-          </button>
-
-
-          {/* ================= FAVORITES ================= */}
-          <button
-            onClick={handleFavoritesClick}
-            className="flex items-center gap-1.5 text-gray-300 hover:text-pink-400 transition-colors cursor-pointer"
-            aria-label="Favorites"
-          >
-
-            <Heart className="w-4 h-4 text-pink-400" />
-
-            <span className="hidden md:inline">
-              Favorites
-            </span>
-
-          </button>
-
-
-          {/* ================= NOTIFICATIONS ================= */}
-          <button
-            className="relative p-1.5 text-gray-400 hover:text-pink-400 transition-colors cursor-pointer"
-            aria-label="Notifications"
-          >
-
-            <Bell className="w-5 h-5 text-pink-400/80" />
-
-            <span className="absolute top-1 right-1 w-2 h-2 bg-pink-500 rounded-full animate-pulse"></span>
-
-          </button>
-
-
-          {/* ================= USER ================= */}
-          {session ? (
-
-            <div
-              className="relative"
-              ref={userMenuRef}
-            >
-
-              <div
-                onClick={() => setShowUserMenu(!showUserMenu)}
-                className="flex items-center gap-2 bg-[#161a23] border border-pink-500/20 py-1 px-2 sm:px-2.5 rounded-full cursor-pointer hover:border-pink-500/40 transition-all"
-              >
-
-                {/* Avatar */}
-                <div className="w-7 h-7 rounded-full bg-pink-500 flex items-center justify-center font-bold text-xs text-white shadow-md shadow-pink-500/20 uppercase shrink-0">
-
-                  {username.charAt(0)}
-
-                </div>
-
-
-                {/* Username */}
-                <div className="text-left text-xs hidden md:block">
-
-                  <p className="font-semibold text-gray-200 leading-tight max-w-[100px] truncate">
-                    {username}
-                  </p>
-
-                  <p className="text-[10px] text-pink-400 font-medium">
-                    Member
-                  </p>
-
-                </div>
-
-
-                <ChevronDown className="w-3.5 h-3.5 text-gray-400 ml-0.5" />
-
-              </div>
-
-
-              {/* User Dropdown */}
-              {showUserMenu && (
-
-                <div className="absolute right-0 mt-2 w-48 bg-[#141824] border border-pink-500/20 rounded-2xl shadow-xl py-2 z-50">
-
-                  <div className="px-4 py-2 border-b border-pink-500/10">
-
-                    <p className="text-xs text-gray-400 truncate">
-                      {userEmail}
-                    </p>
-
-                  </div>
-
-
-                  <button
-                    onClick={handleLogout}
-                    className="w-full flex items-center gap-2 px-4 py-2 text-xs font-bold text-pink-400 hover:bg-pink-500/10 transition-colors cursor-pointer"
-                  >
-
-                    <LogOut className="w-4 h-4" />
-
-                    Sign Out
-
-                  </button>
-
-                </div>
-
-              )}
-
-            </div>
-
-          ) : (
-
-            /* ================= LOGIN ================= */
-            <button
-              onClick={onOpenAuth}
-              className="flex items-center gap-2 bg-pink-500 hover:bg-pink-600 text-white px-3 sm:px-4 py-1.5 rounded-full text-xs font-bold transition-all shadow-md shadow-pink-500/20 cursor-pointer"
-            >
-
-              <User className="w-4 h-4" />
-
-              <span className="hidden sm:inline">
-                Login
-              </span>
-
-            </button>
-
-          )}
-
-        </div>
-
+    <div className="bg-[#0a0c10] min-h-screen text-white">
+
+      {/* =====================================
+          NAVBAR
+          - Hna Navbar rah sticky, walakin khassna ndiroha fixed bach tb9a fixe 100%
+          - Ila bghiti tb9a kifma hiya, khelliha, walakin daba ghadi n7elloha b div wrapper
+      ===================================== */}
+      <div className="fixed top-0 left-0 right-0 z-50">
+        <Navbar session={session} onOpenAuth={onOpenAuth} />
       </div>
 
+      {/* =====================================
+          FIXED READER BAR
+          - FIXE 100% o matbedel la color
+          - top-[64px] bach tb9a taht Navbar direct
+          - z-40 bach tb9a TAHT Navbar (Navbar z-50)
+      ===================================== */}
+      <div
+        className="
+          fixed
+          top-[64px]
+          sm:top-[72px]
+          left-0
+          right-0
+          z-40
+          w-full
+          min-h-[52px]
+          bg-[#141824]/95
+          backdrop-blur-md
+          border-b
+          border-pink-500/20
+          shadow-lg
+          flex
+          items-center
+          justify-between
+          px-3
+          sm:px-6
+          py-2
+        "
+      >
+        {/* BACK BUTTON */}
+        <button
+          onClick={() => navigate(-1)}
+          className="
+            flex items-center gap-1
+            text-xs font-bold
+            text-gray-300
+            hover:text-pink-400
+            transition-colors
+            cursor-pointer
+            shrink-0
+          "
+        >
+          <ArrowLeft className="w-4 h-4 text-pink-400" />
+          <span className="hidden sm:inline">Back</span>
+        </button>
 
-      {/* ================= MOBILE SEARCH BAR ================= */}
-      {showMobileSearch && (
-
-        <div className="sm:hidden mt-3 pt-2 border-t border-pink-500/10 relative">
-
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            onKeyDown={handleSearch}
-            placeholder="Search titles..."
-            className="w-full bg-[#161a23] border border-pink-500/20 rounded-full py-2 pl-4 pr-10 text-sm text-gray-200 placeholder-gray-500 outline-none"
-            autoFocus
-          />
-
-          <Search
-            onClick={handleSearch}
-            className="w-4 h-4 text-pink-400 absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer"
-          />
-
+        {/* CENTER TITLE */}
+        <div
+          className="
+            text-xs sm:text-sm
+            font-bold
+            text-pink-400
+            text-center
+            truncate
+            mx-2
+          "
+        >
+          Chapter
         </div>
 
-      )}
+        {/* PREV / NEXT */}
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          {prevChapterId ? (
+            <Link
+              to={`/read/${prevChapterId}`}
+              className="
+                flex items-center justify-center gap-1
+                text-xs
+                bg-pink-500/10
+                border border-pink-500/30
+                px-2 sm:px-2.5
+                py-1.5
+                rounded-lg
+                text-pink-400
+                hover:bg-pink-500/20
+                transition-all
+                font-bold
+              "
+            >
+              <ChevronLeft className="w-4 h-4" />
+              <span className="hidden sm:inline">Prev</span>
+            </Link>
+          ) : (
+            <span
+              className="
+                flex items-center justify-center gap-1
+                text-xs
+                bg-gray-800/40
+                border border-gray-700
+                px-2 sm:px-2.5
+                py-1.5
+                rounded-lg
+                text-gray-500
+                opacity-50
+              "
+            >
+              <ChevronLeft className="w-4 h-4" />
+              <span className="hidden sm:inline">Prev</span>
+            </span>
+          )}
 
-    </nav>
+          {nextChapterId ? (
+            <Link
+              to={`/read/${nextChapterId}`}
+              className="
+                flex items-center justify-center gap-1
+                text-xs
+                bg-pink-500
+                text-white
+                px-2.5 sm:px-3
+                py-1.5
+                rounded-lg
+                hover:bg-pink-600
+                transition-all
+                font-bold
+                shadow-sm
+              "
+            >
+              <span className="hidden sm:inline">Next</span>
+              <ChevronRight className="w-4 h-4" />
+            </Link>
+          ) : (
+            <span
+              className="
+                flex items-center justify-center gap-1
+                text-xs
+                bg-gray-800/40
+                border border-gray-700
+                px-2.5 sm:px-3
+                py-1.5
+                rounded-lg
+                text-gray-500
+                opacity-50
+              "
+            >
+              <span className="hidden sm:inline">Next</span>
+              <ChevronRight className="w-4 h-4" />
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* =====================================
+          MAIN CONTENT
+          - pt-[130px] bach lcontenu ybda taht Navbar + Reader Bar
+      ===================================== */}
+      <main
+        className="
+          max-w-4xl
+          mx-auto
+          px-3
+          sm:px-4
+          py-6
+          pt-[130px]
+          sm:pt-[145px]
+          flex
+          flex-col
+          items-center
+        "
+      >
+        {loading ? (
+          <div className="flex flex-col justify-center items-center h-[60vh] gap-3">
+            <Loader2 className="w-10 h-10 text-pink-500 animate-spin" />
+            <p className="text-sm font-medium text-pink-400/80 animate-pulse">
+              Loading chapter pages...
+            </p>
+          </div>
+        ) : error ? (
+          <div className="text-center py-16 bg-[#141824] border border-pink-500/10 rounded-2xl p-8 max-w-md my-10">
+            <p className="text-gray-300 text-sm mb-4">
+              Failed to load chapter pages.
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="
+                inline-flex items-center gap-2
+                px-4 py-2
+                bg-pink-500/10
+                border border-pink-500/30
+                hover:bg-pink-500/20
+                text-pink-400
+                rounded-xl
+                text-xs font-bold
+                transition-all
+                cursor-pointer
+              "
+            >
+              <RefreshCw className="w-4 h-4" />
+              Retry
+            </button>
+          </div>
+        ) : (
+          <div className="w-full flex flex-col items-center gap-2">
+            {pages.map((url, index) => (
+              <img
+                key={index}
+                src={url}
+                alt={`Page ${index + 1}`}
+                className="
+                  w-full
+                  max-w-3xl
+                  h-auto
+                  rounded-md
+                  shadow-lg
+                  block
+                "
+                loading="lazy"
+              />
+            ))}
+
+            <div className="flex items-center justify-between w-full max-w-3xl my-8 pt-6 border-t border-pink-500/10">
+              {prevChapterId ? (
+                <Link
+                  to={`/read/${prevChapterId}`}
+                  className="
+                    flex items-center gap-2
+                    text-sm
+                    bg-[#141824]
+                    border border-pink-500/20
+                    px-4 py-2.5
+                    rounded-xl
+                    text-pink-400
+                    hover:bg-pink-500/10
+                    transition-all
+                    font-bold
+                  "
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                  <span>Previous Chapter</span>
+                </Link>
+              ) : <div />}
+
+              {nextChapterId ? (
+                <Link
+                  to={`/read/${nextChapterId}`}
+                  className="
+                    flex items-center gap-2
+                    text-sm
+                    bg-pink-500
+                    text-white
+                    px-4 py-2.5
+                    rounded-xl
+                    hover:bg-pink-600
+                    transition-all
+                    font-bold
+                  "
+                >
+                  <span>Next Chapter</span>
+                  <ChevronRight className="w-5 h-5" />
+                </Link>
+              ) : <div />}
+            </div>
+          </div>
+        )}
+
+        {!loading && !error && (
+          <div className="w-full max-w-3xl mt-6 border-t border-pink-500/10 pt-8">
+            <Comments
+              mangaId={chapterId}
+              chapterId={chapterId}
+              session={session}
+              onOpenAuth={onOpenAuth}
+            />
+          </div>
+        )}
+      </main>
+    </div>
   );
 }
