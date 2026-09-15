@@ -17,21 +17,32 @@ export default function MangaCard({ manga, session, onOpenAuth }) {
     : manga.attributes?.description?.en || 'No description available.';
 
   // استخراج وتعديل رابط الغلاف ليمر عبر Proxy الصور
-  const getCoverUrl = () => {
-    let cover = manga.cover;
+const getCoverUrl = () => {
+  let cover = manga.cover;
 
-    if (!cover && manga.relationships) {
-      const coverRel = manga.relationships.find(r => r.type === 'cover_art');
-      if (coverRel?.attributes?.fileName) {
-        cover = `https://uploads.mangadex.org/covers/${manga.id}/${coverRel.attributes.fileName}.256.jpg`;
-      }
+  if (!cover && manga.relationships) {
+    const coverRel = manga.relationships.find(
+      (r) => r.type === 'cover_art'
+    );
+
+    if (coverRel?.attributes?.fileName) {
+      cover = `https://uploads.mangadex.org/covers/${manga.id}/${coverRel.attributes.fileName}.256.jpg`;
     }
+  }
 
-    if (!cover) return null;
+  if (!cover) return null;
 
-    // تمرير الرابط عبر الـ Proxy لتفادي الحماية
-    return `https://images.weserv.nl/?url=${encodeURIComponent(cover)}`;
-  };
+  // استعمال Image Proxy الخاص بالمشروع
+  if (cover.startsWith('/api/pages')) {
+    return cover;
+  }
+
+  if (cover.startsWith('http')) {
+    return `/api/pages?url=${encodeURIComponent(cover)}`;
+  }
+
+  return cover;
+};
 
   const coverUrl = getCoverUrl();
 

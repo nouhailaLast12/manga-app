@@ -69,19 +69,22 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
         const descObj = item?.attributes?.description || {};
         const description = descObj.en || Object.values(descObj)[0] || 'No description available.';
 
-        const coverRel = item?.relationships?.find((r) => r.type === 'cover_art');
-        const coverFileName = coverRel?.attributes?.fileName;
+       const coverRel = item?.relationships?.find(
+  (r) => r.type === 'cover_art'
+);
 
-        const rawCover = coverFileName 
-          ? `https://uploads.mangadex.org/covers/${item.id}/${coverFileName}.256.jpg`
-          : null;
+const coverFileName = coverRel?.attributes?.fileName;
 
-        // تمرير الرابط عبر الـ Proxy لتفادي حماية Hotlinking
-        const directCover = rawCover 
-          ? `https://images.weserv.nl/?url=${encodeURIComponent(rawCover)}`
-          : null;
+const rawCover = coverFileName
+  ? `https://uploads.mangadex.org/covers/${item.id}/${coverFileName}.256.jpg`
+  : null;
 
-        setImgSrc(directCover);
+// Our own image proxy
+const directCover = rawCover
+  ? `/api/pages?url=${encodeURIComponent(rawCover)}`
+  : null;
+
+setImgSrc(directCover);
 
         const genres = item?.attributes?.tags
           ?.filter((tag) => tag.attributes?.group === 'genre')
