@@ -4,11 +4,15 @@ import { supabase } from '../supabaseClient';
 import Comments from '../components/Comments';
 import { BookOpen, ExternalLink, Loader2, Sparkles, ImageOff, Heart } from 'lucide-react';
 
+const SUPABASE_COVERS_URL = 'https://ttgjavukktyzelercrgq.supabase.co/storage/v1/object/public/covers';
+
 export default function MangaDetails({ session: propSession, onOpenAuth }) {
   const { id } = useParams();
   const [manga, setManga] = useState(null);
   const [chapters, setChapters] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [imgSrc, setImgSrc] = useState(null);
+  const [triedFallback, setTriedFallback] = useState(false);
   const [imgError, setImgError] = useState(false);
   const [session, setSession] = useState(propSession);
   const [isFavorite, setIsFavorite] = useState(false);
@@ -51,10 +55,21 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
     checkIfFavorite();
   }, [id, session?.user?.id]);
 
+  const handleImgError = () => {
+    if (!triedFallback && manga?.fallbackCover) {
+      // الصورة ديال Supabase ماخدماتش → نجربو direct MangaDex
+      setImgSrc(manga.fallbackCover);
+      setTriedFallback(true);
+    } else {
+      setImgError(true);
+    }
+  };
+
   useEffect(() => {
     const getMangaDetails = async () => {
       setLoading(true);
-      setImgError(false); 
+      setImgError(false);
+      setTriedFallback(false);
       try {
         const mangaRes = await fetch(
           `/api/mangadex/manga/${id}?includes[]=cover_art`
@@ -64,17 +79,23 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
 
         const titleObj = item?.attributes?.title || {};
         const title = titleObj.en || titleObj['ja-ro'] || titleObj.ja || Object.values(titleObj)[0] || 'Untitled';
-        
+
         const descObj = item?.attributes?.description || {};
         const description = descObj.en || Object.values(descObj)[0] || 'No description available.';
 
         const coverRel = item?.relationships?.find((r) => r.type === 'cover_art');
         const coverFileName = coverRel?.attributes?.fileName;
-        
-        
-        const cover = coverFileName
-          ? `https://ttgjavukktyzelercrgq.supabase.co/storage/v1/object/public/covers/${coverFileName}`
+
+        // مهم: الملفات ف Supabase Storage مخزنين بسمية manga ID (id.jpg)
+        // ماشي بسمية coverFileName ديال MangaDex
+        const supabaseCover = `${SUPABASE_COVERS_URL}/${id}.jpg`;
+
+        // fallback: إذا الصورة ماكانتش موجودة ف Supabase
+        const fallbackCover = coverFileName
+          ? `https://uploads.mangadex.org/covers/${id}/${coverFileName}.256.jpg`
           : null;
+
+        setImgSrc(supabaseCover);
 
         const genres = item?.attributes?.tags
           ?.filter((tag) => tag.attributes?.group === 'genre')
@@ -85,7 +106,8 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
           title,
           description,
           status: item?.attributes?.status?.toUpperCase() || 'ONGOING',
-          cover,
+          cover: supabaseCover,
+          fallbackCover,
           genres
         });
 
@@ -95,7 +117,7 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
         const chaptersData = await chaptersRes.json();
         const allChapters = chaptersData.data || [];
 
-        
+        // تصفية الفصول لمنع التكرار
         const uniqueChapters = [];
         const seenChapterNumbers = new Set();
 
@@ -175,11 +197,11 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
       {/* Header / Info Section */}
       <div className="bg-[#141824] rounded-2xl border border-pink-500/10 p-6 mb-8 flex flex-col md:flex-row gap-8">
         <div className="w-full md:w-64 aspect-[3/4] bg-[#0a0c10] rounded-xl overflow-hidden shrink-0 flex items-center justify-center border border-pink-500/10">
-          {manga.cover && !imgError ? (
+          {imgSrc && !imgError ? (
             <img
-              src={manga.cover}
+              src={imgSrc}
               alt={manga.title}
-              onError={() => setImgError(true)}
+              onError={handleImgError}
               className="w-full h-full object-cover"
             />
           ) : (
@@ -285,15 +307,14 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
             </a>
           </div>
         )}
-        hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
       </div>
 
       {/* Comments Section */}
-      <Comments 
-        mangaId={id} 
+      <Comments
+        mangaId={id}
         chapterId={id}
-        session={session} 
-        onOpenAuth={onOpenAuth} 
+        session={session}
+        onOpenAuth={onOpenAuth}
       />
     </main>
   );
