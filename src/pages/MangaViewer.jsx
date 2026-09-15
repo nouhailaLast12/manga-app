@@ -26,10 +26,6 @@ export default function MangaViewer({
   const [prevChapterId, setPrevChapterId] = useState(null);
   const [nextChapterId, setNextChapterId] = useState(null);
 
-  // =========================
-  // SESSION
-  // =========================
-
   useEffect(() => {
     if (propSession) {
       setSession(propSession);
@@ -41,10 +37,6 @@ export default function MangaViewer({
         });
     }
   }, [propSession]);
-
-  // =========================
-  // FETCH CHAPTER
-  // =========================
 
   useEffect(() => {
     const fetchChapterAndInfo = async () => {
@@ -59,10 +51,6 @@ export default function MangaViewer({
       window.scrollTo(0, 0);
 
       try {
-        // =========================
-        // FETCH CHAPTER PAGES
-        // =========================
-
         const res = await fetch(
           `/api/mangadex/at-home/server/${chapterId}`
         );
@@ -77,11 +65,7 @@ export default function MangaViewer({
         const hash = data.chapter?.hash;
         const pageFiles = data.chapter?.data || [];
 
-        if (
-          !baseUrl ||
-          !hash ||
-          pageFiles.length === 0
-        ) {
+        if (!baseUrl || !hash || pageFiles.length === 0) {
           throw new Error('Invalid chapter data');
         }
 
@@ -96,31 +80,20 @@ export default function MangaViewer({
 
         setPages(imageUrls);
 
-        // =========================
-        // FETCH CHAPTER INFO
-        // =========================
-
         const chInfoRes = await fetch(
           `/api/mangadex/chapter/${chapterId}`
         );
 
         if (!chInfoRes.ok) {
-          throw new Error(
-            'Failed to load chapter info'
-          );
+          throw new Error('Failed to load chapter info');
         }
 
         const chInfoData = await chInfoRes.json();
 
         const mangaRel =
           chInfoData.data?.relationships?.find(
-            (relation) =>
-              relation.type === 'manga'
+            (relation) => relation.type === 'manga'
           );
-
-        // =========================
-        // FETCH MANGA CHAPTERS
-        // =========================
 
         if (mangaRel?.id) {
           const feedRes = await fetch(
@@ -128,36 +101,23 @@ export default function MangaViewer({
           );
 
           if (!feedRes.ok) {
-            throw new Error(
-              'Failed to load manga chapters'
-            );
+            throw new Error('Failed to load manga chapters');
           }
 
           const feedData = await feedRes.json();
+          const allChapters = feedData.data || [];
 
-          const allChapters =
-            feedData.data || [];
-
-          // =========================
-          // SORT CHAPTERS
-          // =========================
-
-          const sortedChapters =
-            [...allChapters].sort((a, b) => {
+          const sortedChapters = [...allChapters].sort(
+            (a, b) => {
               const aNum = parseFloat(
                 a.attributes?.chapter || 0
               );
-
               const bNum = parseFloat(
                 b.attributes?.chapter || 0
               );
-
               return aNum - bNum;
-            });
-
-          // =========================
-          // REMOVE DUPLICATES
-          // =========================
+            }
+          );
 
           const chapterMap = new Map();
 
@@ -167,16 +127,12 @@ export default function MangaViewer({
 
             if (!chapterNumber) continue;
 
-            // Prioritize current chapter
             if (chapter.id === chapterId) {
               chapterMap.set(
                 chapterNumber,
                 chapter
               );
-            }
-
-            // Otherwise keep first version
-            else if (
+            } else if (
               !chapterMap.has(chapterNumber)
             ) {
               chapterMap.set(
@@ -187,13 +143,7 @@ export default function MangaViewer({
           }
 
           const uniqueChapters =
-            Array.from(
-              chapterMap.values()
-            );
-
-          // =========================
-          // FIND CURRENT CHAPTER
-          // =========================
+            Array.from(chapterMap.values());
 
           const currentIndex =
             uniqueChapters.findIndex(
@@ -225,7 +175,6 @@ export default function MangaViewer({
           'Error fetching chapter:',
           err
         );
-
         setError(true);
       } finally {
         setLoading(false);
@@ -236,37 +185,23 @@ export default function MangaViewer({
   }, [chapterId]);
 
   return (
-    <div className="
-      bg-[#0a0c10]
-      min-h-screen
-      text-white
-      flex
-      flex-col
-      justify-between
-    ">
-
+    <div className="bg-[#0a0c10] min-h-screen text-white flex flex-col justify-between">
       <div>
-
         {/* =========================
             NAVBAR
         ========================= */}
-
         <Navbar
           session={session}
           onOpenAuth={onOpenAuth}
         />
 
-
         {/* =========================
-            FIXED CONTROL BAR
+            STICKY CONTROL BAR (MOBILE FRIENDLY)
         ========================= */}
-
         <div className="
-          fixed
-          top-[64px]
-          left-0
-          right-0
-          z-40
+          sticky
+          top-0
+          z-50
           bg-[#141824]/95
           backdrop-blur-md
           border-b
@@ -274,59 +209,37 @@ export default function MangaViewer({
           px-3
           sm:px-6
           py-2.5
-          sm:py-3
           flex
           items-center
           justify-between
+          w-full
         ">
-
-          {/* =========================
-              BACK BUTTON
-          ========================= */}
-
+          {/* BACK BUTTON */}
           <button
             onClick={() => navigate(-1)}
             className="
               flex
               items-center
-              gap-1.5
-              sm:gap-2
+              gap-1
               text-xs
               font-bold
               text-gray-300
               hover:text-pink-400
               transition-colors
               cursor-pointer
-              shrink-0
             "
           >
-            <ArrowLeft className="w-4 h-4" />
-
-            <span className="
-              hidden
-              xs:inline
-              sm:inline
-            ">
-              Back
-            </span>
+            <ArrowLeft className="w-4 h-4 text-pink-400" />
+            <span className="text-xs">Back</span>
           </button>
 
+          {/* CHAPTER TITLE / INDICATOR */}
+          <div className="text-xs font-bold text-pink-400 truncate max-w-[120px] sm:max-w-none">
+            Reader
+          </div>
 
-          {/* =========================
-              PREV / NEXT
-          ========================= */}
-
-          <div className="
-            flex
-            items-center
-            gap-2
-            sm:gap-3
-          ">
-
-            {/* =========================
-                PREVIOUS
-            ========================= */}
-
+          {/* PREV / NEXT CONTROLS */}
+          <div className="flex items-center gap-1.5">
             {prevChapterId && (
               <Link
                 to={`/read/${prevChapterId}`}
@@ -339,30 +252,17 @@ export default function MangaViewer({
                   border
                   border-pink-500/20
                   px-2.5
-                  sm:px-3
                   py-1.5
                   rounded-lg
                   text-pink-400
                   hover:bg-pink-500/20
                   transition-all
-                  whitespace-nowrap
                 "
               >
                 <ChevronLeft className="w-4 h-4" />
-
-                <span className="
-                  hidden
-                  sm:inline
-                ">
-                  Prev
-                </span>
+                <span className="hidden xs:inline">Prev</span>
               </Link>
             )}
-
-
-            {/* =========================
-                NEXT
-            ========================= */}
 
             {nextChapterId && (
               <Link
@@ -375,53 +275,33 @@ export default function MangaViewer({
                   bg-pink-500
                   text-white
                   px-2.5
-                  sm:px-3
                   py-1.5
                   rounded-lg
                   hover:bg-pink-600
                   transition-all
-                  whitespace-nowrap
                 "
               >
-                <span className="
-                  hidden
-                  sm:inline
-                ">
-                  Next
-                </span>
-
+                <span className="hidden xs:inline">Next</span>
                 <ChevronRight className="w-4 h-4" />
               </Link>
             )}
-
           </div>
-
         </div>
-
 
         {/* =========================
             MAIN
         ========================= */}
-
         <main className="
           max-w-4xl
           mx-auto
           px-3
           sm:px-4
-          pt-20
-          sm:pt-24
-          pb-6
+          py-6
           flex
           flex-col
           items-center
         ">
-
-          {/* =========================
-              LOADING
-          ========================= */}
-
           {loading ? (
-
             <div className="
               flex
               flex-col
@@ -430,14 +310,12 @@ export default function MangaViewer({
               h-[60vh]
               gap-3
             ">
-
               <Loader2 className="
                 w-10
                 h-10
                 text-pink-500
                 animate-spin
               " />
-
               <p className="
                 text-sm
                 font-medium
@@ -446,15 +324,8 @@ export default function MangaViewer({
               ">
                 Loading chapter pages...
               </p>
-
             </div>
-
           ) : error ? (
-
-            /* =========================
-               ERROR
-            ========================= */
-
             <div className="
               text-center
               py-16
@@ -466,7 +337,6 @@ export default function MangaViewer({
               max-w-md
               my-10
             ">
-
               <p className="
                 text-gray-300
                 text-sm
@@ -474,11 +344,8 @@ export default function MangaViewer({
               ">
                 Failed to load chapter pages.
               </p>
-
               <button
-                onClick={() =>
-                  window.location.reload()
-                }
+                onClick={() => window.location.reload()}
                 className="
                   inline-flex
                   items-center
@@ -498,18 +365,10 @@ export default function MangaViewer({
                 "
               >
                 <RefreshCw className="w-4 h-4" />
-
                 Retry
               </button>
-
             </div>
-
           ) : (
-
-            /* =========================
-               MANGA PAGES
-            ========================= */
-
             <div className="
               w-full
               flex
@@ -517,7 +376,6 @@ export default function MangaViewer({
               items-center
               gap-2
             ">
-
               {pages.map((url, index) => (
                 <img
                   key={index}
@@ -542,11 +400,9 @@ export default function MangaViewer({
                 />
               ))}
 
-
               {/* =========================
                   BOTTOM NAVIGATION
               ========================= */}
-
               <div className="
                 flex
                 items-center
@@ -558,9 +414,7 @@ export default function MangaViewer({
                 border-t
                 border-pink-500/10
               ">
-
                 {prevChapterId ? (
-
                   <Link
                     to={`/read/${prevChapterId}`}
                     className="
@@ -581,34 +435,19 @@ export default function MangaViewer({
                       font-bold
                     "
                   >
-
-                    <ChevronLeft className="
-                      w-5
-                      h-5
-                    " />
-
-                    <span className="
-                      hidden
-                      sm:inline
-                    ">
+                    <ChevronLeft className="w-5 h-5" />
+                    <span className="hidden sm:inline">
                       Previous Chapter
                     </span>
-
-                    <span className="
-                      sm:hidden
-                    ">
+                    <span className="sm:hidden">
                       Previous
                     </span>
-
                   </Link>
-
                 ) : (
                   <div />
                 )}
 
-
                 {nextChapterId ? (
-
                   <Link
                     to={`/read/${nextChapterId}`}
                     className="
@@ -627,44 +466,25 @@ export default function MangaViewer({
                       font-bold
                     "
                   >
-
-                    <span className="
-                      hidden
-                      sm:inline
-                    ">
+                    <span className="hidden sm:inline">
                       Next Chapter
                     </span>
-
-                    <span className="
-                      sm:hidden
-                    ">
+                    <span className="sm:hidden">
                       Next
                     </span>
-
-                    <ChevronRight className="
-                      w-5
-                      h-5
-                    " />
-
+                    <ChevronRight className="w-5 h-5" />
                   </Link>
-
                 ) : (
                   <div />
                 )}
-
               </div>
-
             </div>
-
           )}
-
 
           {/* =========================
               COMMENTS
           ========================= */}
-
           {!loading && !error && (
-
             <div className="
               w-full
               max-w-3xl
@@ -673,22 +493,16 @@ export default function MangaViewer({
               border-pink-500/10
               pt-8
             ">
-
               <Comments
                 mangaId={chapterId}
                 chapterId={chapterId}
                 session={session}
                 onOpenAuth={onOpenAuth}
               />
-
             </div>
-
           )}
-
         </main>
-
       </div>
-
     </div>
   );
 }
