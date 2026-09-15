@@ -43,7 +43,7 @@ export default function MangaViewer({ session: propSession, onOpenAuth }) {
           throw new Error('Invalid chapter data');
         }
 
-        // استخدام الـ Proxy المخصص لصفحات الفصول لتفادي الحظر
+       
         setPages(
           pageFiles.map(
             (fileName) =>

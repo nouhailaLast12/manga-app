@@ -71,7 +71,7 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
         const coverRel = item?.relationships?.find((r) => r.type === 'cover_art');
         const coverFileName = coverRel?.attributes?.fileName;
         
-        // الرابط الثابت من Supabase Storage (متطابق مع الصفحة الرئيسية)
+        
         const cover = coverFileName
           ? `https://ttgjavukktyzelercrgq.supabase.co/storage/v1/object/public/covers/${coverFileName}`
           : null;
@@ -95,7 +95,7 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
         const chaptersData = await chaptersRes.json();
         const allChapters = chaptersData.data || [];
 
-        // تصفية الفصول لمنع التكرار
+        
         const uniqueChapters = [];
         const seenChapterNumbers = new Set();
 
@@ -285,6 +285,7 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
             </a>
           </div>
         )}
+        hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
       </div>
 
       {/* Comments Section */}
