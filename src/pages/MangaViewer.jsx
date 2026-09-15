@@ -183,18 +183,13 @@ export default function MangaViewer({
 
       {/* =====================================
           NAVBAR
-          - Hna khass tb9a FIXE bach maykounch mkhbi
-          - Ila Navbar dyalek deja fixe f component, zid ghir had class hna
       ===================================== */}
-      <div className="fixed top-0 left-0 right-0 z-[90]">
-        <Navbar session={session} onOpenAuth={onOpenAuth} />
-      </div>
+      <Navbar session={session} onOpenAuth={onOpenAuth} />
 
       {/* =====================================
           FIXED READER BAR
           - FIXE 100% o matbedel la color
           - Z-index 100 bach tb9a fo9
-          - Top-[64px] bach tb9a taht Navbar direct
       ===================================== */}
       <div
         className="
@@ -247,7 +242,7 @@ export default function MangaViewer({
             mx-2
           "
         >
-          Chapter
+          Chapter {chapterId ? '...' : ''} {/* Hna t9dr tbdel b smiya dyal chapter ila bghiti */}
         </div>
 
         {/* PREV / NEXT */}
@@ -336,7 +331,7 @@ export default function MangaViewer({
 
       {/* =====================================
           MAIN CONTENT
-          - Hna drna pt-[130px] bach lcontenu ybda taht Navbar + Reader Bar
+          - Hna drna pt-[130px] bach lcontenu ykoun taht dik bar
       ===================================== */}
       <main
         className="
