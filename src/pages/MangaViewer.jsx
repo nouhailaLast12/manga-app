@@ -107,7 +107,6 @@ export default function MangaViewer({
           const feedData = await feedRes.json();
           const allChapters = feedData.data || [];
 
-          // ترتيب الفصول وتصفيتها بشكل صحيح وبسيط
           const sortedChapters = [...allChapters].sort(
             (a, b) => {
               const aNum = parseFloat(
@@ -178,8 +177,10 @@ export default function MangaViewer({
             FIXED CONTROL BAR (MOBILE & PC)
         ========================= */}
         <div className="
-          sticky
-          top-0
+          fixed
+          top-16
+          left-0
+          right-0
           z-50
           bg-[#141824]/95
           backdrop-blur-md
@@ -284,7 +285,7 @@ export default function MangaViewer({
         </div>
 
         {/* =========================
-            MAIN CONTENT
+            MAIN CONTENT (Added padding-top to avoid overlap)
         ========================= */}
         <main className="
           max-w-4xl
@@ -292,6 +293,7 @@ export default function MangaViewer({
           px-3
           sm:px-4
           py-6
+          pt-24
           flex
           flex-col
           items-center
