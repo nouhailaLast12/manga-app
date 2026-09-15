@@ -44,7 +44,6 @@ export default function MangaViewer({
 
       setLoading(true);
       setError(false);
-
       setPages([]);
       setPrevChapterId(null);
       setNextChapterId(null);
@@ -85,7 +84,6 @@ export default function MangaViewer({
 
         setPages(imageUrls);
 
-
         // =========================
         // FETCH CHAPTER INFO
         // =========================
@@ -105,13 +103,11 @@ export default function MangaViewer({
             (relation) => relation.type === 'manga'
           );
 
-
         // =========================
         // FETCH MANGA CHAPTERS
         // =========================
 
         if (mangaRel?.id) {
-
           const feedRes = await fetch(
             `/api/mangadex/manga/${mangaRel.id}/feed?translatedLanguage[]=en&translatedLanguage[]=fr&order[chapter]=asc&limit=500`
           );
@@ -122,30 +118,25 @@ export default function MangaViewer({
 
           const feedData = await feedRes.json();
 
-          const allChapters =
-            feedData.data || [];
-
+          const allChapters = feedData.data || [];
 
           // =========================
           // SORT CHAPTERS
           // =========================
 
-          const sortedChapters =
-            [...allChapters].sort((a, b) => {
+          const sortedChapters = [...allChapters].sort(
+            (a, b) => {
+              const aNum = parseFloat(
+                a.attributes?.chapter || 0
+              );
 
-              const aNum =
-                parseFloat(
-                  a.attributes?.chapter || 0
-                );
-
-              const bNum =
-                parseFloat(
-                  b.attributes?.chapter || 0
-                );
+              const bNum = parseFloat(
+                b.attributes?.chapter || 0
+              );
 
               return aNum - bNum;
-            });
-
+            }
+          );
 
           // =========================
           // REMOVE DUPLICATES
@@ -154,40 +145,32 @@ export default function MangaViewer({
           const chapterMap = new Map();
 
           for (const chapter of sortedChapters) {
-
             const chapterNumber =
               chapter.attributes?.chapter;
 
             if (!chapterNumber) continue;
 
-
             // Prioritize current chapter
             if (chapter.id === chapterId) {
-
               chapterMap.set(
                 chapterNumber,
                 chapter
               );
-
             }
 
             // Otherwise keep first version
             else if (
               !chapterMap.has(chapterNumber)
             ) {
-
               chapterMap.set(
                 chapterNumber,
                 chapter
               );
-
             }
           }
 
-
           const uniqueChapters =
             Array.from(chapterMap.values());
-
 
           // =========================
           // FIND CURRENT CHAPTER
@@ -199,64 +182,48 @@ export default function MangaViewer({
                 chapter.id === chapterId
             );
 
-
           if (currentIndex !== -1) {
-
             setPrevChapterId(
-
               currentIndex > 0
                 ? uniqueChapters[
                     currentIndex - 1
                   ].id
                 : null
-
             );
 
-
             setNextChapterId(
-
               currentIndex <
               uniqueChapters.length - 1
-
                 ? uniqueChapters[
                     currentIndex + 1
                   ].id
-
                 : null
-
             );
-
           }
-
         }
-
       } catch (err) {
-
         console.error(
           'Error fetching chapter:',
           err
         );
 
         setError(true);
-
       } finally {
-
         setLoading(false);
-
       }
     };
 
-
     fetchChapterAndInfo();
-
   }, [chapterId]);
 
-
   return (
-
     <div className="bg-[#0a0c10] min-h-screen text-white flex flex-col justify-between">
 
       <div>
+
+        {/* =========================
+            NAVBAR
+        ========================= */}
 
         <Navbar
           session={session}
@@ -264,53 +231,122 @@ export default function MangaViewer({
         />
 
 
-        {/* CONTROL BAR */}
+        {/* =========================
+            FIXED / STICKY CONTROL BAR
+        ========================= */}
 
-        <div className="sticky top-0 z-40 bg-[#141824]/90 backdrop-blur-md border-b border-pink-500/10 px-6 py-3 flex items-center justify-between">
+        <div className="
+          sticky
+          top-0
+          sm:top-0
+          z-40
+          bg-[#141824]/95
+          backdrop-blur-md
+          border-b
+          border-pink-500/10
+          px-3
+          sm:px-6
+          py-2.5
+          sm:py-3
+          flex
+          items-center
+          justify-between
+        ">
+
+          {/* BACK */}
 
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-xs font-bold text-gray-300 hover:text-pink-400 transition-colors cursor-pointer"
+            className="
+              flex
+              items-center
+              gap-1.5
+              sm:gap-2
+              text-xs
+              font-bold
+              text-gray-300
+              hover:text-pink-400
+              transition-colors
+              cursor-pointer
+              shrink-0
+            "
           >
-
             <ArrowLeft className="w-4 h-4" />
 
-            Back
-
+            <span className="hidden xs:inline sm:inline">
+              Back
+            </span>
           </button>
 
 
-          <div className="flex items-center gap-3">
+          {/* PREV / NEXT */}
+
+          <div className="
+            flex
+            items-center
+            gap-2
+            sm:gap-3
+          ">
+
+            {/* PREVIOUS */}
 
             {prevChapterId && (
-
               <Link
                 to={`/read/${prevChapterId}`}
-                className="flex items-center gap-1 text-xs bg-pink-500/10 border border-pink-500/20 px-3 py-1.5 rounded-lg text-pink-400 hover:bg-pink-500/20 transition-all"
+                className="
+                  flex
+                  items-center
+                  gap-1
+                  text-xs
+                  bg-pink-500/10
+                  border
+                  border-pink-500/20
+                  px-2.5
+                  sm:px-3
+                  py-1.5
+                  rounded-lg
+                  text-pink-400
+                  hover:bg-pink-500/20
+                  transition-all
+                  whitespace-nowrap
+                "
               >
-
                 <ChevronLeft className="w-4 h-4" />
 
-                Prev
-
+                <span className="hidden sm:inline">
+                  Prev
+                </span>
               </Link>
-
             )}
 
 
-            {nextChapterId && (
+            {/* NEXT */}
 
+            {nextChapterId && (
               <Link
                 to={`/read/${nextChapterId}`}
-                className="flex items-center gap-1 text-xs bg-pink-500 text-white px-3 py-1.5 rounded-lg hover:bg-pink-600 transition-all"
+                className="
+                  flex
+                  items-center
+                  gap-1
+                  text-xs
+                  bg-pink-500
+                  text-white
+                  px-2.5
+                  sm:px-3
+                  py-1.5
+                  rounded-lg
+                  hover:bg-pink-600
+                  transition-all
+                  whitespace-nowrap
+                "
               >
-
-                Next
+                <span className="hidden sm:inline">
+                  Next
+                </span>
 
                 <ChevronRight className="w-4 h-4" />
-
               </Link>
-
             )}
 
           </div>
@@ -318,101 +354,199 @@ export default function MangaViewer({
         </div>
 
 
-        {/* MAIN */}
+        {/* =========================
+            MAIN
+        ========================= */}
 
-        <main className="max-w-4xl mx-auto px-4 py-6 flex flex-col items-center">
+        <main className="
+          max-w-4xl
+          mx-auto
+          px-3
+          sm:px-4
+          py-6
+          flex
+          flex-col
+          items-center
+        ">
 
+          {/* =========================
+              LOADING
+          ========================= */}
 
           {loading ? (
 
-            <div className="flex flex-col justify-center items-center h-[60vh] gap-3">
+            <div className="
+              flex
+              flex-col
+              justify-center
+              items-center
+              h-[60vh]
+              gap-3
+            ">
 
-              <Loader2 className="w-10 h-10 text-pink-500 animate-spin" />
+              <Loader2 className="
+                w-10
+                h-10
+                text-pink-500
+                animate-spin
+              " />
 
-              <p className="text-sm font-medium text-pink-400/80 animate-pulse">
-
+              <p className="
+                text-sm
+                font-medium
+                text-pink-400/80
+                animate-pulse
+              ">
                 Loading chapter pages...
-
               </p>
 
             </div>
 
           ) : error ? (
 
-            <div className="text-center py-16 bg-[#141824] border border-pink-500/10 rounded-2xl p-8 max-w-md my-10">
+            /* =========================
+               ERROR
+            ========================= */
 
-              <p className="text-gray-300 text-sm mb-4">
+            <div className="
+              text-center
+              py-16
+              bg-[#141824]
+              border
+              border-pink-500/10
+              rounded-2xl
+              p-8
+              max-w-md
+              my-10
+            ">
 
+              <p className="
+                text-gray-300
+                text-sm
+                mb-4
+              ">
                 Failed to load chapter pages.
-
               </p>
-
 
               <button
                 onClick={() => window.location.reload()}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-pink-500/10 border border-pink-500/30 hover:bg-pink-500/20 text-pink-400 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                className="
+                  inline-flex
+                  items-center
+                  gap-2
+                  px-4
+                  py-2
+                  bg-pink-500/10
+                  border
+                  border-pink-500/30
+                  hover:bg-pink-500/20
+                  text-pink-400
+                  rounded-xl
+                  text-xs
+                  font-bold
+                  transition-all
+                  cursor-pointer
+                "
               >
-
                 <RefreshCw className="w-4 h-4" />
 
                 Retry
-
               </button>
 
             </div>
 
           ) : (
 
-            <div className="w-full flex flex-col items-center gap-2">
+            /* =========================
+               MANGA PAGES
+            ========================= */
 
-
-              {/* MANGA PAGES */}
+            <div className="
+              w-full
+              flex
+              flex-col
+              items-center
+              gap-2
+            ">
 
               {pages.map((url, index) => (
-
                 <img
                   key={index}
                   src={url}
                   alt={`Page ${index + 1}`}
-                  className="w-full max-w-3xl h-auto rounded-md shadow-lg"
+                  className="
+                    w-full
+                    max-w-3xl
+                    h-auto
+                    rounded-md
+                    shadow-lg
+                  "
                   loading="lazy"
                   onError={(e) => {
-
                     console.error(
                       `Failed to load page ${
                         index + 1
                       }`,
                       url
                     );
-
                   }}
                 />
-
               ))}
 
 
-              {/* BOTTOM NAVIGATION */}
+              {/* =========================
+                  BOTTOM NAVIGATION
+              ========================= */}
 
-              <div className="flex items-center justify-between w-full max-w-3xl my-8 pt-6 border-t border-pink-500/10">
-
+              <div className="
+                flex
+                items-center
+                justify-between
+                w-full
+                max-w-3xl
+                my-8
+                pt-6
+                border-t
+                border-pink-500/10
+              ">
 
                 {prevChapterId ? (
 
                   <Link
                     to={`/read/${prevChapterId}`}
-                    className="flex items-center gap-2 text-sm bg-[#141824] border border-pink-500/20 px-5 py-2.5 rounded-xl text-pink-400 hover:bg-pink-500/10 transition-all font-bold"
+                    className="
+                      flex
+                      items-center
+                      gap-2
+                      text-sm
+                      bg-[#141824]
+                      border
+                      border-pink-500/20
+                      px-3
+                      sm:px-5
+                      py-2.5
+                      rounded-xl
+                      text-pink-400
+                      hover:bg-pink-500/10
+                      transition-all
+                      font-bold
+                    "
                   >
 
                     <ChevronLeft className="w-5 h-5" />
 
-                    Previous Chapter
+                    <span className="hidden sm:inline">
+                      Previous Chapter
+                    </span>
+
+                    <span className="sm:hidden">
+                      Previous
+                    </span>
 
                   </Link>
 
                 ) : (
-
                   <div />
-
                 )}
 
 
@@ -420,19 +554,37 @@ export default function MangaViewer({
 
                   <Link
                     to={`/read/${nextChapterId}`}
-                    className="flex items-center gap-2 text-sm bg-pink-500 text-white px-5 py-2.5 rounded-xl hover:bg-pink-600 transition-all font-bold"
+                    className="
+                      flex
+                      items-center
+                      gap-2
+                      text-sm
+                      bg-pink-500
+                      text-white
+                      px-3
+                      sm:px-5
+                      py-2.5
+                      rounded-xl
+                      hover:bg-pink-600
+                      transition-all
+                      font-bold
+                    "
                   >
 
-                    Next Chapter
+                    <span className="hidden sm:inline">
+                      Next Chapter
+                    </span>
+
+                    <span className="sm:hidden">
+                      Next
+                    </span>
 
                     <ChevronRight className="w-5 h-5" />
 
                   </Link>
 
                 ) : (
-
                   <div />
-
                 )}
 
               </div>
@@ -442,11 +594,20 @@ export default function MangaViewer({
           )}
 
 
-          {/* COMMENTS */}
+          {/* =========================
+              COMMENTS
+          ========================= */}
 
           {!loading && !error && (
 
-            <div className="w-full max-w-3xl mt-6 border-t border-pink-500/10 pt-8">
+            <div className="
+              w-full
+              max-w-3xl
+              mt-6
+              border-t
+              border-pink-500/10
+              pt-8
+            ">
 
               <Comments
                 mangaId={chapterId}
@@ -464,7 +625,5 @@ export default function MangaViewer({
       </div>
 
     </div>
-
   );
-
 }
