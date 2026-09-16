@@ -98,14 +98,12 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
           genres
         });
 
-        // جلب الفصول مع تحديد limit=100 لمنع مشاكل الذاكرة
         const chaptersRes = await fetch(
           `/api/mangadex/manga/${id}/feed?translatedLanguage[]=en&translatedLanguage[]=fr&order[chapter]=asc&limit=100`
         );
         const chaptersData = await chaptersRes.json();
         const allChapters = chaptersData.data || [];
 
-        // ترتيب دقيق بالفصول الرقمية وتفادي التكرار
         const sortedChapters = [...allChapters].sort((a, b) => {
           const aNum = parseFloat(a.attributes?.chapter || 0);
           const bNum = parseFloat(b.attributes?.chapter || 0);
@@ -185,7 +183,6 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
 
   return (
     <main className="max-w-7xl mx-auto px-6 py-8">
-      {/* Header / Info Section */}
       <div className="bg-[#141824] rounded-2xl border border-pink-500/10 p-6 mb-8 flex flex-col md:flex-row gap-8">
         <div className="w-full md:w-64 aspect-[3/4] bg-[#0a0c10] rounded-xl overflow-hidden shrink-0 flex items-center justify-center border border-pink-500/10 relative">
           {imgSrc && !imgError ? (
@@ -251,7 +248,6 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
         </div>
       </div>
 
-      {/* Chapters Section */}
       <div className="bg-[#141824] rounded-2xl border border-pink-500/10 p-6 mb-8">
         <div className="flex items-center gap-2 mb-6">
           <BookOpen className="w-6 h-6 text-pink-400" />
@@ -300,7 +296,6 @@ export default function MangaDetails({ session: propSession, onOpenAuth }) {
         )}
       </div>
 
-      {/* Comments Section */}
       <Comments
         mangaId={id}
         chapterId={id}
