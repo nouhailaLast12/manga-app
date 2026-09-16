@@ -1,7 +1,13 @@
 export default async function handler(req, res) {
   const { url } = req.query;
+  
   if (!url) {
     return res.status(400).json({ error: 'Image URL is required' });
+  }
+
+  // حماية لمنع الحلقات التكرارية واستهلاك الذاكرة (Out of Memory)
+  if (!url.startsWith('https://uploads.mangadex.org') && !url.startsWith('https://api.mangadex.org')) {
+    return res.status(403).json({ error: 'Unauthorized URL source' });
   }
 
   try {
