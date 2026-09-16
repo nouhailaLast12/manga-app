@@ -37,9 +37,13 @@ function Home({ session, setShowAuthModal }) {
           const descObj = item.attributes?.description || {};
           const description = descObj.en || Object.values(descObj)[0] || 'No description available.';
 
-          // الرابط المباشر الأصلي ديال MangaDex للكفرات
-          const directCover = coverFileName 
+          // استخدام الـ Proxy المخصص للصور لتجنب حظر CORS والشاشة البيضاء
+          const rawCover = coverFileName 
             ? `https://uploads.mangadex.org/covers/${item.id}/${coverFileName}.256.jpg`
+            : null;
+
+          const directCover = rawCover
+            ? `/api/page?url=${encodeURIComponent(rawCover)}`
             : null;
 
           return {
